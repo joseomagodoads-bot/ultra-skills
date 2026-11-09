@@ -1,0 +1,7 @@
+scan-ultra-saida/
+ultra-run-*/
+concorrentes/
+__pycache__/
+*.pyc
+.DS_Store
+plano-final/

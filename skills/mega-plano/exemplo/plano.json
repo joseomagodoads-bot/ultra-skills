@@ -1,0 +1,48 @@
+{
+ "projeto": {
+  "nome": "Padaria Pão de Ouro (exemplo fictício)",
+  "url": "https://exemplo.com",
+  "veredito": "Vende pouco no delivery: o cardápio no iFood não mostra o produto mais pedido no balcão e não há canal próprio.",
+  "estrategia_unica": "Ser a padaria do café da manhã entregue até 7h30 no bairro, com pedido direto pelo WhatsApp.",
+  "publico": "Famílias e escritórios num raio de 3 km.",
+  "meta_90_dias": "200 pedidos por mês no canal próprio. [HIPOTESE]"
+ },
+ "acoes": [
+  {"titulo": "Colocar o pão de queijo no topo do cardápio do iFood", "etapa": "site", "semana": 1, "dono": "Dono",
+   "impacto": 7, "facilidade": 10, "evidencia": "TESTADO",
+   "porque": "É o item mais vendido no balcão e está na 4ª categoria do cardápio online.",
+   "passos": ["Criar a categoria 'Mais pedidos'", "Foto nova com luz natural"],
+   "entregavel": "Pão de queijo quentinho, saindo do forno às 6h. Caixa com 10.",
+   "metrica": "Pedidos com pão de queijo por semana", "meta": "+30%"},
+  {"titulo": "Lançar a assinatura de café da manhã pelo WhatsApp", "etapa": "oferta", "semana": 2, "dono": "Dono",
+   "impacto": 9, "facilidade": 5, "evidencia": "HIPOTESE",
+   "porque": "Pedido recorrente sem comissão. Não há concorrente no bairro que entregue antes das 7h30.",
+   "passos": ["Definir 2 cestas", "Testar com 10 clientes do balcão"],
+   "entregavel": "Café da manhã na sua porta até 7h30, de segunda a sexta. R$ 89 por semana. Cancele quando quiser.",
+   "metrica": "Assinantes ativos", "meta": "30 no dia 60"},
+  {"titulo": "Cartão com QR na sacola: 'peça direto e ganhe um pão de queijo'", "etapa": "aquisicao", "semana": 1, "dono": "Balcão",
+   "impacto": 6, "facilidade": 9, "evidencia": "EVIDENCIA",
+   "porque": "Restaurantes que oferecem vantagem no canal próprio migram parte dos clientes do app.",
+   "passos": ["Imprimir 500 cartões", "Colocar em todo pedido do iFood"],
+   "entregavel": "Da próxima vez, peça direto pelo WhatsApp: (11) 9xxxx-xxxx. Ganhe 1 pão de queijo no primeiro pedido.",
+   "metrica": "Pedidos no WhatsApp vindos do cartão", "meta": "40 por mês"}
+ ],
+ "ofertas": [
+  {"nome": "Assinatura Café da Manhã", "publico": "Famílias do bairro", "promessa": "Café da manhã na porta até 7h30",
+   "preco": "R$ 89/semana", "garantia": "Cancele quando quiser", "headline": "Acorde com o café pronto na porta."}
+ ],
+ "ativos": [
+  {"tipo": "WhatsApp", "titulo": "Mensagem de boas-vindas", "texto": "Bom dia! Aqui é a Pão de Ouro. Quer ver as cestas da semana? Responda 1 para família ou 2 para escritório."}
+ ],
+ "paleta": [
+  {"hex": "#3b2a1a", "nome": "Café", "uso": "Texto"},
+  {"hex": "#e0a526", "nome": "Ouro", "uso": "Botões e destaques", "destaque": true},
+  {"hex": "#fbf6ec", "nome": "Farinha", "uso": "Fundo"}
+ ],
+ "conteudo": [
+  {"sinal": "Pergunta frequente no balcão: 'que horas sai o pão?'", "gancho": "6h02: o primeiro pão saindo. Quem pede até 7h recebe esse.", "formato": "Reel", "funil": "Topo"}
+ ],
+ "metricas": [{"nome": "Pedidos no canal próprio", "atual": "0", "meta": "200/mês", "quando": "dia 90"}],
+ "suposicoes": ["Entregador disponível às 6h30"],
+ "fontes": ["Exemplo fictício para demonstrar o formato"]
+}
