@@ -51,6 +51,8 @@ Dê notas honestas. Ação com impacto alto e evidência HIPOTESE fica abaixo de
 
 ## Passo 2: gerar
 
+No Windows, troque `python3` por `py`.
+
 ```bash
 python3 <pasta-desta-skill>/scripts/gerar.py plano.json --validar          # confere antes
 python3 <pasta-desta-skill>/scripts/gerar.py plano.json --saida plano-final

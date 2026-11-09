@@ -119,10 +119,15 @@ def proximo(a):
     for x in anteriores:
         print(f"    - {x}")
     print(f"  Escreva o resultado em: {pasta / e['saida']}")
-    print(f"  Depois rode: python3 {AQUI} proximo --pasta {pasta}")
+    print(f"  Depois rode: \"{sys.executable}\" \"{AQUI}\" proximo --pasta {pasta}")
 
 
 def main(argv=None):
+    for fluxo in (sys.stdout, sys.stderr):  # terminal do Windows (cp1252) não quebra com acentos e símbolos
+        try:
+            fluxo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description="Pipeline Ultra")
     sub = ap.add_subparsers(dest="cmd", required=True)
     i = sub.add_parser("iniciar")

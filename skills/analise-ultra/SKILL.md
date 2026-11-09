@@ -45,6 +45,10 @@ Cada etapa usa as saídas das anteriores como prova. Não pule etapas. Se o usu�
 
    Os arquivos ficam na pasta `ultra-run-<site>/`.
 
+**No Windows,** troque `python3` por `py` (ou `python`) em todos os comandos das skills.
+
+**Se houver terminal,** o scan é sempre o script. Não troque por extensão de navegador nem por leitura de página: o script já abre o Chrome/Edge do computador quando o site precisa, e lê as páginas de termos, preços e contato.
+
 ## Sem terminal
 
 Se não houver como rodar Python, siga a mesma ordem usando as ferramentas disponíveis (leitura de páginas, busca). Monte o mapa à mão na estrutura do `scan-ultra` e avise que não houve conferência automática.

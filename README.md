@@ -11,7 +11,7 @@ scan-ultra → pare-de-pensar-como-ia → teu-saas-e-uma-merda → tu-e-doido-is
 
 | Skill | O que faz |
 |---|---|
-| **scan-ultra** | Lê a página e os concorrentes em paralelo, com Python. Gera um mapa (títulos, textos, CTAs, preços, ofertas, prova social, contato, pixel, GA, SEO, cores, fontes) e confere o próprio mapa contra o HTML. |
+| **scan-ultra** | Lê o site e os concorrentes em segundos, com Python. Passa por firewall, abre sites feitos em JavaScript usando o Chrome/Edge do próprio computador, lê sozinho as páginas de termos, preços e contato, e entrega um **Raio-X de venda** (promessa, oferta, prova, confiança, CTA, atrito, medição, SEO) conferido contra o HTML. |
 | **pare-de-pensar-como-ia** | Começa por "isso vende?". Depois vêm 5 pessoas (vendas; artista sem dinheiro; crescimento; técnico; crítico) e um confronto entre o que a IA pensou e o que elas viram. |
 | **teu-saas-e-uma-merda** | Jobs, Wozniak, Huang e Bezos, a partir de mapas mentais tirados de livros e cartas, atacam o produto em 5 rodadas. Toda acusação precisa de prova. |
 | **tu-e-doido-isso-que-e-marketing** | 10 mestres (Ogilvy, Schwartz, Hopkins, Hormozi, Brunson, Sean Ellis, Ries e Trout, Byron Sharp, Gary Vee, Aaron Ross) montam o plano: concorrentes, aquisição, copy, paleta provada por código, Instagram, oferta, 3 ofertas, 90 dias e conteúdo com sinal real. |
@@ -23,18 +23,19 @@ scan-ultra → pare-de-pensar-como-ia → teu-saas-e-uma-merda → tu-e-doido-is
 ```bash
 git clone https://github.com/joseomagodoads-bot/ultra-skills.git
 cd ultra-skills
-bash install.sh            # Claude Code + Codex
-bash install.sh --claude   # só Claude Code  (~/.claude/skills)
-bash install.sh --codex    # só Codex        (~/.codex/skills)
-bash install.sh --projeto  # só no projeto atual
+python3 install.py            # Claude Code + Codex   (Windows: py install.py)
+python3 install.py --claude   # só Claude Code  (~/.claude/skills)
+python3 install.py --codex    # só Codex        (~/.codex/skills)
+python3 install.py --projeto  # só no projeto atual
 ```
 
-**Windows:** copie as pastas de `skills/` para `%USERPROFILE%\.claude\skills` (e/ou `.codex\skills`).
+Sem git: em **Code → Download ZIP**, descompacte e rode `python3 install.py` (Windows: `py install.py`) dentro da pasta. No Linux e no macOS, `bash install.sh` também funciona.
 
 **Requisitos:**
-- Python 3.8+.
-- Para o PDF: `pip install reportlab`. Sem ele, o mega-plano gera HTML para imprimir em PDF.
-- Para sites feitos em JavaScript e para prints: `pip install playwright && playwright install chromium` (opcional).
+- **Obrigatório:** Python 3.8+.
+- **Para sites em JavaScript e prints:** basta ter Chrome, Edge, Brave ou Chromium instalado. O Playwright é opcional (`pip install playwright && playwright install chromium`).
+- **Para o PDF:** `pip install reportlab`. Sem ele, o mega-plano gera HTML para imprimir em PDF.
+- **No macOS, se der erro de certificado:** `pip install certifi`.
 
 **Codex:** as versões recentes leem skills em `~/.codex/skills`. Se a sua não ler, aponte o `AGENTS.md` do projeto para `skills/analise-ultra/SKILL.md`.
 
@@ -49,7 +50,7 @@ Basta pedir à IA:
 Ou rode os motores direto:
 
 ```bash
-# scan (várias URLs em paralelo + comparativo)
+# scan (várias URLs em paralelo + comparativo; no Windows use "py")
 python3 skills/scan-ultra/scripts/scan.py https://meusite.com https://concorrente.com --links --print
 
 # pipeline inteiro (o scan é automático; as etapas 2 a 5 a IA faz e grava em arquivo)
@@ -74,11 +75,22 @@ python3 skills/mega-plano/scripts/gerar.py skills/mega-plano/exemplo/plano.json 
 
 O `plano-para-ia.md` leva o mesmo plano com instruções. Cole em qualquer IA e diga **"aplique A01"** ou **"corrija o plano: [dado novo]"**.
 
+## Quando o scan não lê
+
+| Mensagem | Solução |
+|---|---|
+| `python3` não é reconhecido | Windows: use `py` ou `python` |
+| `CERTIFICATE_VERIFY_FAILED` | `pip install certifi`; no macOS, rode também "Install Certificates.command" |
+| "conteúdo montado por JavaScript" + "nenhum Chrome/Edge encontrado" | Instale o Chrome, ou `pip install playwright && playwright install chromium`, ou aponte o navegador em `SCAN_ULTRA_CHROME` |
+| "travou ao abrir a página" | Servidor ou contêiner: use o Playwright |
+| `Tunnel connection failed` | A rede onde a IA roda bloqueia sites: rode no seu computador |
+
 ## Estrutura
 
 ```
 ultra-skills/
-├── install.sh
+├── install.py          (Windows, macOS, Linux)
+├── install.sh          (macOS, Linux)
 ├── LICENSE
 └── skills/
     ├── analise-ultra/                    SKILL.md + scripts/pipeline.py

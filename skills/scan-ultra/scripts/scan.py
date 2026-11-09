@@ -10,26 +10,42 @@ Uso:
   python3 scan.py URL [URL ...]               # uma ou várias páginas, em paralelo
   python3 scan.py --arquivo urls.txt          # uma URL por linha
   python3 scan.py URL --links                 # também testa os links internos
-  python3 scan.py URL --render                # renderiza com navegador (sites em JavaScript)
-  python3 scan.py URL --print                 # salva print desktop e mobile (exige --render)
+  python3 scan.py URL --print                 # salva print desktop e mobile
+  python3 scan.py URL --navegador nenhum      # só HTTP, sem abrir navegador
+
+No Windows use "python" ou "py" no lugar de "python3".
+
+Como lê (cascata automática):
+  1. HTTP direto, com cabeçalhos de navegador real (passa pela maioria dos firewalls)
+  2. Se o site for montado em JavaScript ou bloquear robôs: abre um navegador sem janela
+     (Playwright, se instalado; senão o Chrome, Edge, Brave ou Chromium do próprio computador)
+  3. Se nada abrir: lê os dados embutidos na página (Next.js, JSON) e avisa o que faltou
+Depois lê sozinho as páginas-chave (preços, termos, contato, reembolso, sobre, FAQ) para
+completar o que a página principal não mostra (CNPJ, garantia, contato).
 
 Saída (pasta --saida, padrão ./scan-ultra-saida):
   <site>.json        mapa completo
   <site>.md          resumo para leitura rápida
   comparativo.md     tabela lado a lado, quando há mais de uma URL
 
-Só usa a biblioteca padrão do Python 3.8+. O modo --render usa Playwright, se
-estiver instalado (pip install playwright && playwright install chromium).
+Só usa a biblioteca padrão do Python 3.8+. Opcionais: certifi (certificados no macOS),
+brotli, playwright. Nenhum é obrigatório.
 """
 
 from __future__ import annotations
 
 import argparse
 import colorsys
+import glob
 import gzip
 import json
+import os
 import re
+import shutil
+import ssl
+import subprocess
 import sys
+import tempfile
 import time
 import zlib
 from collections import Counter
@@ -40,9 +56,26 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
-VERSAO = "1.0.0"
-UA = "Mozilla/5.0 (compatible; scan-ultra/1.0; +https://github.com/)"
+VERSAO = "2.0.0"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/131.0.0.0 Safari/537.36")
+UA_MOBILE = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 "
+             "(KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1")
 MAX_BYTES = 6_000_000
+try:  # brotli é opcional
+    import brotli  # type: ignore
+except ImportError:
+    brotli = None
+RE_BLOQUEIO = re.compile(r"just a moment|cf-chl|attention required|captcha|access denied|"
+                         r"verify you are human|ddos protection|bot detection|perimeterx|datadome", re.I)
+
+
+def _contexto_ssl_certifi():
+    try:
+        import certifi  # type: ignore
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:  # noqa: BLE001
+        return None
 
 # --------------------------------------------------------------------------
 # Rede
@@ -53,16 +86,24 @@ def baixar(url: str, timeout: float = 20.0, metodo: str = "GET", max_bytes: int 
     """Baixa uma URL e mede o tempo. Nunca levanta exceção: devolve o erro no dict."""
     req = Request(url, method=metodo, headers={
         "User-Agent": UA,
-        "Accept": "text/html,application/xhtml+xml,text/css,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.6",
-        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate" + (", br" if brotli else ""),
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Site": "none", "Sec-Fetch-User": "?1",
     })
     t0 = time.perf_counter()
     out = {"url": url, "status": None, "url_final": url, "ttfb_ms": None, "total_ms": None,
-           "bytes": 0, "headers": {}, "texto": "", "erro": None}
+           "bytes": 0, "headers": {}, "texto": "", "erro": None, "bloqueado": False}
     try:
         try:
-            resp = urlopen(req, timeout=timeout)
+            try:
+                resp = urlopen(req, timeout=timeout)
+            except URLError as e:  # certificado: comum no Python do macOS → tenta com certifi
+                ctx = _contexto_ssl_certifi()
+                if ctx is None or not isinstance(getattr(e, "reason", None), ssl.SSLError):
+                    raise
+                resp = urlopen(req, timeout=timeout, context=ctx)
         except HTTPError as e:  # 4xx/5xx ainda têm corpo
             resp = e
         out["ttfb_ms"] = round((time.perf_counter() - t0) * 1000)
@@ -82,10 +123,20 @@ def baixar(url: str, timeout: float = 20.0, metodo: str = "GET", max_bytes: int 
                 corpo = zlib.decompress(corpo)
             except zlib.error:
                 corpo = zlib.decompress(corpo, -zlib.MAX_WBITS)
+        elif "br" in enc and brotli:
+            corpo = brotli.decompress(corpo)
         out["bytes"] = len(corpo)
         out["texto"] = decodificar(corpo, hdr.get("content-type", ""))
+        if out["status"] in (401, 403, 429, 503) and (RE_BLOQUEIO.search(out["texto"][:20000])
+                                                     or "cloudflare" in hdr.get("server", "").lower()
+                                                     or out["status"] in (403, 429)):
+            out["bloqueado"] = True
     except (URLError, OSError, ValueError) as e:
-        out["erro"] = f"{type(e).__name__}: {getattr(e, 'reason', e)}"
+        motivo = getattr(e, "reason", e)
+        out["erro"] = f"{type(e).__name__}: {motivo}"
+        if isinstance(motivo, ssl.SSLError) or "CERTIFICATE_VERIFY_FAILED" in str(motivo):
+            out["erro"] += (" | Certificado: rode 'pip install certifi' (no macOS também: "
+                            "abra 'Install Certificates.command' na pasta do Python)")
     out["total_ms"] = round((time.perf_counter() - t0) * 1000)
     return out
 
@@ -102,38 +153,138 @@ def decodificar(corpo: bytes, content_type: str) -> str:
         return corpo.decode("utf-8", errors="replace")
 
 
-def renderizar(url: str, timeout: float, prints: bool, pasta: Path, slug: str) -> dict:
-    """Renderiza com Chromium via Playwright. Devolve html e caminhos dos prints."""
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return {"erro": "Playwright não instalado. Rode: pip install playwright && playwright install chromium"}
-    out = {"html": "", "prints": [], "erro": None, "total_ms": None, "console_erros": []}
+def achar_chrome() -> str | None:
+    """Acha Chrome, Edge, Brave ou Chromium instalados no computador."""
+    env = os.environ.get("SCAN_ULTRA_CHROME")
+    if env and Path(env).exists():
+        return env
+    candidatos = []
+    # headless-shell (do Playwright) é o mais estável para ler páginas sem janela
+    for padrao in ("~/.cache/ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell*",
+                   "/opt/pw-browsers/chromium_headless_shell-*/chrome-*/chrome-headless-shell",
+                   "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell",
+                   os.path.join(os.environ.get("LOCALAPPDATA", ""), "ms-playwright", "chromium_headless_shell-*", "chrome-*",
+                                "chrome-headless-shell.exe")):
+        candidatos += sorted(glob.glob(os.path.expanduser(padrao)), reverse=True)
+    if sys.platform.startswith("win"):
+        for base in (os.environ.get("PROGRAMFILES", r"C:\Program Files"),
+                     os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)"),
+                     os.environ.get("LOCALAPPDATA", "")):
+            if base:
+                candidatos += [rf"{base}\Google\Chrome\Application\chrome.exe",
+                               rf"{base}\Microsoft\Edge\Application\msedge.exe",
+                               rf"{base}\BraveSoftware\Brave-Browser\Application\brave.exe",
+                               rf"{base}\Chromium\Application\chrome.exe"]
+    elif sys.platform == "darwin":
+        candidatos += ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                       "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+                       "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+                       "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                       os.path.expanduser("~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")]
+    for nome in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge",
+                 "microsoft-edge-stable", "brave-browser", "chrome", "msedge"):
+        w = shutil.which(nome)
+        if w:
+            candidatos.append(w)
+    for padrao in ("~/.cache/ms-playwright/chromium-*/chrome-*/chrome", "/opt/pw-browsers/chromium-*/chrome-*/chrome",
+                   "~/Library/Caches/ms-playwright/chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium"):
+        candidatos += sorted(glob.glob(os.path.expanduser(padrao)), reverse=True)
+    return next((c for c in candidatos if c and Path(c).exists()), None)
+
+
+def _render_playwright(url: str, timeout: float, prints: bool, pasta: Path, slug: str) -> dict:
+    from playwright.sync_api import sync_playwright  # ImportError tratado por quem chama
+    out = {"html": "", "prints": [], "erro": None, "total_ms": None, "console_erros": [], "motor": "playwright"}
     t0 = time.perf_counter()
-    try:
-        with sync_playwright() as p:
-            nav = p.chromium.launch()
-            for nome, vw, vh, mobile in (("desktop", 1440, 900, False), ("mobile", 390, 844, True)):
-                if nome == "mobile" and not prints:
-                    break
-                ctx = nav.new_context(viewport={"width": vw, "height": vh}, is_mobile=mobile,
-                                      user_agent=UA, locale="pt-BR")
-                pg = ctx.new_page()
-                if nome == "desktop":
-                    pg.on("console", lambda m: out["console_erros"].append(m.text[:200]) if m.type == "error" else None)
+    with sync_playwright() as p:
+        nav = p.chromium.launch()
+        for nome, vw, vh, mobile, ua in (("desktop", 1440, 900, False, UA), ("mobile", 390, 844, True, UA_MOBILE)):
+            if nome == "mobile" and not prints:
+                break
+            ctx = nav.new_context(viewport={"width": vw, "height": vh}, is_mobile=mobile, user_agent=ua, locale="pt-BR")
+            pg = ctx.new_page()
+            if nome == "desktop":
+                pg.on("console", lambda m: out["console_erros"].append(m.text[:200]) if m.type == "error" else None)
+            try:
                 pg.goto(url, wait_until="networkidle", timeout=int(timeout * 1000))
-                if nome == "desktop":
-                    out["html"] = pg.content()
-                    out["total_ms"] = round((time.perf_counter() - t0) * 1000)
-                if prints:
-                    arq = pasta / f"{slug}-{nome}.png"
-                    pg.screenshot(path=str(arq), full_page=True)
-                    out["prints"].append(str(arq))
-                ctx.close()
-            nav.close()
-    except Exception as e:  # noqa: BLE001 - qualquer falha do navegador vira lacuna, não crash
-        out["erro"] = f"{type(e).__name__}: {str(e)[:300]}"
+            except Exception:  # noqa: BLE001 - networkidle pode nunca chegar; usa o que carregou
+                pg.wait_for_timeout(1500)
+            if nome == "desktop":
+                pg.mouse.wheel(0, 20000)  # dispara conteúdo carregado ao rolar
+                pg.wait_for_timeout(800)
+                out["html"] = pg.content()
+                out["total_ms"] = round((time.perf_counter() - t0) * 1000)
+            if prints:
+                arq = pasta / f"{slug}-{nome}.png"
+                pg.screenshot(path=str(arq), full_page=True)
+                out["prints"].append(str(arq))
+            ctx.close()
+        nav.close()
     return out
+
+
+def _render_chrome(chrome: str, url: str, timeout: float, prints: bool, pasta: Path, slug: str) -> dict:
+    out = {"html": "", "prints": [], "erro": None, "total_ms": None, "console_erros": [],
+           "motor": f"navegador do sistema ({Path(chrome).name})"}
+    t0 = time.perf_counter()
+    perfil = tempfile.mkdtemp(prefix="scan-ultra-")
+    shell = "headless-shell" in Path(chrome).name
+    base = [chrome] + ([] if shell else ["--headless=new"]) + ["--disable-gpu", "--disable-component-update",
+                                                               "--disable-background-networking", "--hide-scrollbars", "--mute-audio", "--no-first-run",
+            "--no-default-browser-check", "--disable-extensions", f"--user-data-dir={perfil}", "--lang=pt-BR"]
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        base.append("--no-sandbox")
+    try:
+        limite = min(timeout, 30) + 10
+        r = subprocess.run(base + [f"--user-agent={UA}", "--virtual-time-budget=8000", "--dump-dom", url],
+                           capture_output=True, timeout=limite)
+        out["html"] = r.stdout.decode("utf-8", errors="replace")
+        if not out["html"].strip():
+            out["erro"] = "o navegador não devolveu conteúdo: " + r.stderr.decode("utf-8", "replace")[-300:]
+        out["total_ms"] = round((time.perf_counter() - t0) * 1000)
+        if prints:
+            for nome, tam, ua in (("desktop", "1440,3200", UA), ("mobile", "390,2800", UA_MOBILE)):
+                arq = (pasta / f"{slug}-{nome}.png").resolve()
+                try:
+                    subprocess.run(base + [f"--user-agent={ua}", f"--window-size={tam}", "--virtual-time-budget=8000",
+                                           f"--screenshot={arq}", url], capture_output=True, timeout=limite)
+                except subprocess.TimeoutExpired:
+                    pass
+                if arq.exists():
+                    out["prints"].append(str(arq))
+    except subprocess.TimeoutExpired:
+        out["erro"] = (f"{Path(chrome).name} travou ao abrir a página (comum em servidor/contêiner). "
+                       "Instale o Playwright: pip install playwright && playwright install chromium")
+    except OSError as e:
+        out["erro"] = f"não consegui abrir o navegador: {e}"
+    finally:
+        shutil.rmtree(perfil, ignore_errors=True)
+    return out
+
+
+def renderizar(url: str, timeout: float, prints: bool, pasta: Path, slug: str, motor: str = "auto") -> dict:
+    """Abre a página num navegador sem janela. Tenta Playwright e depois o navegador do sistema."""
+    erros = []
+    if motor in ("auto", "playwright"):
+        try:
+            out = _render_playwright(url, timeout, prints, pasta, slug)
+            if out["html"]:
+                return out
+        except ImportError:
+            erros.append("Playwright não instalado")
+        except Exception as e:  # noqa: BLE001
+            erros.append(f"Playwright: {str(e)[:160]}")
+    if motor in ("auto", "chrome"):
+        chrome = achar_chrome()
+        if chrome:
+            out = _render_chrome(chrome, url, timeout, prints, pasta, slug)
+            if out["html"]:
+                return out
+            erros.append(out["erro"] or "navegador sem conteúdo")
+        else:
+            erros.append("nenhum Chrome/Edge/Brave/Chromium encontrado (ou defina SCAN_ULTRA_CHROME com o caminho)")
+    return {"html": "", "prints": [], "erro": "; ".join(erros) or "navegador desativado", "total_ms": None,
+            "console_erros": [], "motor": None}
 
 
 # --------------------------------------------------------------------------
@@ -325,6 +476,12 @@ RE_PROVA_NUM = re.compile(
     r"neg[óo]cios|assinantes|vendas|profissionais|pessoas|estabelecimentos|pizzarias|hamburguerias|lanchonetes|"
     r"bares|cl[ií]nicas|academias|escolas|marcas|ag[eê]ncias|lojistas|vendedores|membros|seguidores|"
     r"inscritos|unidades|franquias|deliverys?)", re.I)
+RE_EMPRESA = re.compile(r"(?:[A-ZÀ-Ú0-9][\wÀ-ú&.'\-]*,?\s+(?:(?:de|da|do|dos|das|e|&)\s+)?){1,6}"
+                        r"(?:LTDA|Ltda\.?|EIRELI|S\.?/?A\.?|EPP|LLC|Inc\.?|Corp\.?|Limited|Ltd\.?)(?=\W|$)")
+RE_CHAVE = re.compile(r"pre[çc]os?|planos?|pricing|plans|termos|terms|privacidade|privacy|reembolso|refund|garantia|"
+                      r"guarantee|devolu|cancel|contato|contact|fale|sobre|about|quem-somos|faq|ajuda|help|suporte|"
+                      r"support|entrega|delivery|shipping|pol[ií]tica|policy", re.I)
+RE_BONUS = r"b[oô]nus|brinde|de presente|gr[aá]tis junto|incluso sem custo"
 PADROES_TEXTO = {
     "teste_gratis": r"teste\s+gr[aá]tis|gr[aá]tis\s+por\s+\d+\s+dias|\d+\s+dias\s+gr[aá]tis|free\s+trial|sem\s+cart[aã]o",
     "garantia": r"garantia|reembolso|devolu[çc][aã]o\s+do\s+dinheiro|dinheiro\s+de\s+volta|risco\s+zero",
@@ -386,6 +543,39 @@ STACK = {
 }
 GENERICAS = {"inherit", "initial", "unset", "sans-serif", "serif", "monospace", "system-ui", "-apple-system",
              "blinkmacsystemfont", "cursive", "fantasy", "ui-sans-serif", "ui-serif", "ui-monospace", "emoji"}
+
+
+def texto_embutido(scripts: list[str], limite: int = 400) -> list[str]:
+    """Tira frases de dados JSON embutidos (Next.js, estado inicial de SPAs)."""
+    linhas, vistos = [], set()
+    for sc in scripts:
+        bruto = sc.strip()
+        m = re.match(r"^(?:window\.)?[\w.$]+\s*=\s*(\{.*\})\s*;?\s*$", bruto, re.S)
+        if m:
+            bruto = m.group(1)
+        if not bruto.startswith(("{", "[")):
+            continue
+        try:
+            dado = json.loads(bruto)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        pilha = [dado]
+        while pilha and len(linhas) < limite:
+            d = pilha.pop()
+            if isinstance(d, dict):
+                pilha.extend(d.values())
+            elif isinstance(d, list):
+                pilha.extend(d)
+            elif isinstance(d, str):
+                t = limpar(re.sub(r"<[^>]+>", " ", d))
+                if len(t) >= 12 and " " in t and not re.match(r"^(https?:|/|\{|data:)", t) and t not in vistos:
+                    vistos.add(t)
+                    linhas.append(t)
+    return linhas
+
+
+def trechos(pad: str, texto: str, n: int = 3) -> list[str]:
+    return achar(rf"[^.!?\n]{{0,60}}(?:{pad})[^.!?\n]{{0,60}}", texto)[:n]
 
 
 def achar(padrao, texto, flags=re.I):
@@ -495,6 +685,15 @@ def montar_mapa(url: str, resp: dict, html: str, css_extra: str, arquivos: dict,
         resp.setdefault("avisos", []).append(f"parser: {e}")
     p.finalizar()
 
+    # site em JavaScript sem render: recupera o texto dos dados embutidos
+    palavras_html = sum(len(l.split()) for s_ in p.secoes for l in s_["linhas"])
+    embutido = []
+    if palavras_html < 150 and (origem == "http" or palavras_html < 40):
+        embutido = texto_embutido(p.scripts_inline)
+        if embutido:
+            p.secoes.append({"titulo": "(texto recuperado de dados embutidos na página)", "nivel": 2, "linhas": embutido})
+            origem = origem + " + dados embutidos"
+
     # linhas separadas por \n: os trechos de contexto não atravessam blocos diferentes
     texto_visivel = "\n".join(l for s in p.secoes for l in s["linhas"])
     texto_busca = "\n".join(h["texto"] for h in p.headings) + "\n" + texto_visivel
@@ -597,6 +796,11 @@ def montar_mapa(url: str, resp: dict, html: str, css_extra: str, arquivos: dict,
         "contato_e_confianca": {
             "whatsapp": whats, "telefones": tel[:5], "emails": emails[:5],
             "cnpj": achar(RE_CNPJ, texto_visivel), "redes": redes,
+            "empresa": achar(RE_EMPRESA, texto_visivel)[:3],
+            "politicas": sorted({l["destino"] for l in links if l["tipo"] in ("interno", "subdominio")
+                                 and re.search(r"termo|terms|privac|reembolso|refund|cancel|pol[ií]tica|policy",
+                                               l["texto"] + " " + l["destino"], re.I)})[:8],
+            "fontes": {},
         },
         "rastreamento": {"ferramentas": sorted(rastreadores), "ids": ids},
         "tecnologia": {"stack_provavel": stack, "scripts_externos": len(p.scripts_src),
@@ -607,8 +811,13 @@ def montar_mapa(url: str, resp: dict, html: str, css_extra: str, arquivos: dict,
         "identidade_visual": visual,
         "arquivos_do_site": arquivos,
     }
+    mapa["sinais_de_oferta"]["bonus"] = trechos(RE_BONUS, texto_busca, 4)
     mapa["verificacao"] = verificar(mapa, html, p)
+    if embutido:
+        mapa["verificacao"]["lacunas"].insert(0, f"{len(embutido)} trechos vieram de dados embutidos (JSON), não do HTML "
+                                                 "renderizado: a ordem na página pode ser outra")
     mapa["sinais"] = sinais(mapa)
+    mapa["raio_x"] = raio_x(mapa)
     return mapa
 
 
@@ -625,8 +834,11 @@ def verificar(mapa: dict, html: str, p: MapaParser) -> dict:
         checks.append({"item": item, "esperado": esperado, "encontrado": encontrado, "ok": bool(ok), "nota": nota})
 
     st = mapa["http"]["status"]
-    check("HTTP 200", 200, st, st == 200, mapa["http"].get("erro") or "")
-    ctype = mapa["http"]["headers"].get("content-type", "") if mapa["origem_html"] == "http" else "text/html (renderizado)"
+    lido_nav = mapa["origem_html"].startswith(("navegador", "playwright")) and mapa["seo"]["palavras_visiveis"] > 50
+    check("Página acessível", 200, st if not lido_nav else f"{st} (lida pelo navegador)", st == 200 or lido_nav,
+          mapa["http"].get("erro") or ("site bloqueia robôs; leitura feita pelo navegador" if lido_nav and st != 200 else ""))
+    ctype = (mapa["http"]["headers"].get("content-type", "") if mapa["origem_html"].startswith("http")
+             else "text/html (renderizado)")
     check("Resposta é HTML", "text/html", ctype, "html" in ctype)
     sem_scripts = re.sub(r"<script\b.*?</script>|<!--.*?-->|<noscript\b.*?</noscript>|<template\b.*?</template>",
                          "", html, flags=re.S | re.I)
@@ -651,69 +863,148 @@ def verificar(mapa: dict, html: str, p: MapaParser) -> dict:
               f"conteúdo provavelmente montado por JavaScript: {', '.join(precos_em_js[:5])}")
 
     palavras = mapa["seo"]["palavras_visiveis"]
-    depende_js = palavras < 150 and (mapa["tecnologia"]["scripts_externos"] >= 2 or mapa["tecnologia"]["raiz_spa"])
-    nota = ("página parece montada por JavaScript: rode de novo com --render" if depende_js
+    via_nav = mapa["origem_html"].startswith(("navegador", "playwright"))
+    depende_js = (not via_nav and palavras < 150
+                  and (mapa["tecnologia"]["scripts_externos"] >= 2 or mapa["tecnologia"]["raiz_spa"]))
+    nota = ("página montada por JavaScript e nenhum navegador abriu: instale o Playwright "
+            "(pip install playwright && playwright install chromium) ou tenha Chrome/Edge instalado" if depende_js
+            else "lida pelo navegador" if via_nav
             else ("página curta, mas sem sinais de depender de JavaScript" if palavras < 150 else ""))
-    check("Conteúdo legível sem JavaScript", "texto no HTML", f"{palavras} palavras", not depende_js, nota)
+    check("Conteúdo legível", "texto da página", f"{palavras} palavras", not depende_js, nota)
 
     if mapa["url_final"].rstrip("/") != mapa["url"].rstrip("/"):
         check("Sem redirecionamento", mapa["url"], mapa["url_final"], False, "a URL redirecionou")
 
     erros = [c for c in checks if not c["ok"]]
-    graves = [c for c in erros if c["item"] in ("HTTP 200", "Resposta é HTML", "Conteúdo legível sem JavaScript")]
+    graves = [c for c in erros if c["item"] in ("Página acessível", "Resposta é HTML", "Conteúdo legível")]
     confianca = "baixa" if graves else ("média" if erros else "alta")
-    lacunas = ["Visual (cores aplicadas, imagens, hierarquia na tela): só visto com --render --print",
+    lacunas = ["Visual (cores aplicadas, imagens, hierarquia na tela): só visto com --print",
                "Comportamento ao clicar (modais, checkout, cálculos): não executado",
                "Áreas com login e conteúdo carregado depois de interação"]
-    if mapa["origem_html"] == "http":
+    if mapa["origem_html"].startswith("http"):
         lacunas.append("Rastreadores carregados via GTM/JavaScript podem não aparecer no HTML")
     return {"confianca": confianca, "checks": checks, "lacunas": lacunas}
 
 
 def sinais(m: dict) -> list[str]:
-    """Achados objetivos que viram munição para a análise. Só fatos do mapa."""
-    s = []
+    """Achados objetivos, ordenados por gravidade. Só fatos do mapa."""
+    achados = []
+
+    def add(grav, texto):
+        achados.append((grav, texto))
+
     c = m["contato_e_confianca"]
     o = m["sinais_de_oferta"]
-    if not c["whatsapp"]:
-        s.append("Nenhum link de WhatsApp na página")
-    if not c["cnpj"]:
-        s.append("CNPJ não aparece no texto")
-    if not m["numeros"]["precos"]:
-        s.append("Nenhum preço visível")
-    if not o["teste_gratis"]:
-        s.append("Sem menção a teste grátis")
-    if not o["garantia"]:
-        s.append("Sem menção a garantia ou reembolso")
-    if not o["prova_social"] and not m["numeros"]["prova_social_numerica"]:
-        s.append("Sem prova social detectável (depoimentos, avaliações, números de clientes)")
-    if m["seo"]["h1_quantidade"] != 1:
-        s.append(f"{m['seo']['h1_quantidade']} H1 na página (o normal é 1)")
-    if not m["seo"].get("viewport"):
-        s.append("Sem meta viewport: no celular a página abre como versão de computador encolhida")
-    if not m["seo"]["meta_description"]:
-        s.append("Sem meta description")
-    if not m["rastreamento"]["ferramentas"]:
-        s.append("Nenhum rastreador encontrado no HTML (pode estar via GTM ou ausente)")
-    elif "Meta Pixel" not in m["rastreamento"]["ferramentas"]:
-        s.append("Meta Pixel não encontrado no HTML")
+    if m["http"].get("status") is None and m["seo"]["palavras_visiveis"] == 0:
+        add(0, f"Página não foi lida: {m['http'].get('erro') or 'sem resposta'}")
+    if m.get("bloqueado"):
+        add(0, "O site bloqueia robôs (firewall/Cloudflare)" + (": lido pelo navegador" if m["seo"]["palavras_visiveis"] > 50 else ""))
+    if not m["seo"]["h1"]:
+        add(0, "Sem H1: a página não declara a promessa principal")
+    if not m["ctas"]:
+        add(0, "Nenhum CTA encontrado")
     sem_destino = [x["texto"] for x in m["ctas"] if x["tipo"] in ("sem_href", "botao")]
     if sem_destino:
-        s.append(f"{len(sem_destino)} CTA(s) sem link (ação via JavaScript): {', '.join(sem_destino[:4])}")
-    if m["imagens"]["sem_alt"]:
-        s.append(f"{m['imagens']['sem_alt']} imagem(ns) sem texto alternativo")
-    a = m.get("arquivos_do_site", {})
-    if a.get("robots", {}).get("bloqueia_tudo"):
-        s.append("robots.txt bloqueia todo o site")
-    if a.get("sitemap", {}).get("status") not in (200, None):
-        s.append("sitemap.xml não encontrado")
-    ttfb = m["http"].get("ttfb_ms")
-    if ttfb and ttfb > 800:
-        s.append(f"Servidor lento para responder: {ttfb} ms até o primeiro byte")
+        add(1, f"{len(sem_destino)} CTA(s) sem link (ação via JavaScript): {', '.join(sem_destino[:4])}")
+    if not (c["cnpj"] or c.get("empresa")):
+        add(0, "Empresa não identificada: sem CNPJ nem razão social" + (" (nem nas páginas-chave)" if m.get("paginas_chave") else ""))
+    if not (c["whatsapp"] or c["telefones"] or c["emails"]):
+        add(0, "Nenhum contato: sem WhatsApp, telefone ou e-mail")
+    elif not c["whatsapp"]:
+        add(2, "Sem link de WhatsApp")
+    if not m["numeros"]["precos"]:
+        add(1, "Nenhum preço visível")
+    if not o["garantia"]:
+        add(1, "Sem garantia ou reembolso escrito")
+    if not o["teste_gratis"]:
+        add(2, "Sem teste grátis")
+    if not o["prova_social"] and not m["numeros"]["prova_social_numerica"]:
+        add(1, "Sem prova social detectável (depoimentos, avaliações, números de clientes)")
+    if not m["seo"].get("viewport"):
+        add(0, "Sem meta viewport: no celular a página abre como versão de computador encolhida")
     quebrados = [l for l in m.get("links_testados", []) if l.get("status") and l["status"] >= 400]
     if quebrados:
-        s.append(f"{len(quebrados)} link(s) interno(s) quebrado(s)")
-    return s
+        add(0, f"{len(quebrados)} link(s) interno(s) quebrado(s)")
+    ttfb = m["http"].get("ttfb_ms")
+    if ttfb and ttfb > 800:
+        add(1, f"Servidor lento: {ttfb} ms até o primeiro byte")
+    f = m["rastreamento"]["ferramentas"]
+    if not f:
+        add(1, "Nenhum rastreador no HTML (pode estar via GTM ou ausente)")
+    elif "Meta Pixel" not in f:
+        add(2, "Meta Pixel não encontrado no HTML")
+    if m["seo"]["h1_quantidade"] > 1:
+        add(2, f"{m['seo']['h1_quantidade']} H1 na página (o normal é 1)")
+    if not m["seo"]["meta_description"]:
+        add(2, "Sem meta description")
+    a = m.get("arquivos_do_site", {})
+    if a.get("robots", {}).get("bloqueia_tudo"):
+        add(0, "robots.txt bloqueia todo o site no Google")
+    if a.get("sitemap", {}).get("status") not in (200, None):
+        add(2, "sitemap.xml não encontrado")
+    if m["imagens"]["sem_alt"]:
+        add(2, f"{m['imagens']['sem_alt']} imagem(ns) sem texto alternativo")
+    nomes = {0: "ALTA", 1: "MÉDIA", 2: "BAIXA"}
+    return [f"[{nomes[g]}] {t}" for g, t in sorted(achados, key=lambda x: x[0])]
+
+
+def raio_x(m: dict) -> dict:
+    """Leitura estratégica: o que um comprador encontra em cada pilar de venda. Nota 0 a 2 por pilar."""
+    secoes = m["secoes"]
+    heroi = next((s_ for s_ in secoes if s_["nivel"] == 1), secoes[0] if secoes else {"titulo": "", "texto": ""})
+    h1 = m["seo"]["h1"][0] if m["seo"]["h1"] else ""
+    sub = heroi["texto"][:260]
+    cta_heroi = next((c for c in m["ctas"] if c["texto"] and c["texto"] in heroi["texto"]), None)
+    acima = {"h1": h1, "subtitulo": sub, "primeiro_cta": cta_heroi}
+
+    o, n, c = m["sinais_de_oferta"], m["numeros"], m["contato_e_confianca"]
+    t = m["seo"]
+    P = []
+
+    def pilar(nome, nota, viu, falta):
+        P.append({"pilar": nome, "nota": nota, "viu": viu, "falta": falta})
+
+    especifico = bool(re.search(r"\d", h1 + " " + sub[:120]))
+    pilar("Promessa", 0 if not h1 else (2 if especifico else 1),
+          f"H1: {h1[:110]}" if h1 else "sem H1",
+          "" if (h1 and especifico) else ("escrever um H1 com a promessa" if not h1 else "número ou resultado concreto no H1/subtítulo"))
+    itens_oferta = {"preço": bool(n["precos"]), "garantia": bool(o["garantia"]), "teste": bool(o["teste_gratis"]),
+                    "urgência/escassez": bool(o["urgencia_escassez"]), "bônus/desconto": bool(o.get("bonus") or o["desconto"])}
+    tem = [k for k, v in itens_oferta.items() if v]
+    pilar("Oferta", 2 if len(tem) >= 3 else (1 if tem else 0), ", ".join(tem) or "nada",
+          ", ".join(k for k, v in itens_oferta.items() if not v))
+    prova = n["prova_social_numerica"] + o["prova_social"][:2]
+    pilar("Prova", 2 if (n["prova_social_numerica"] and o["prova_social"]) else (1 if prova else 0),
+          "; ".join(prova[:3]) or "nada", "" if len(prova) >= 2 else "números de clientes e depoimentos com nome")
+    conf = {"empresa/CNPJ": bool(c["cnpj"] or c.get("empresa")), "contato": bool(c["whatsapp"] or c["telefones"] or c["emails"]),
+            "políticas": bool(c.get("politicas")), "redes": bool(c["redes"])}
+    ok = [k for k, v in conf.items() if v]
+    pilar("Confiança", 2 if len(ok) >= 3 else (1 if ok else 0), ", ".join(ok) or "nada",
+          ", ".join(k for k, v in conf.items() if not v))
+    validos = [x for x in m["ctas"] if x["tipo"] not in ("sem_href", "botao", "ancora")]
+    pilar("Ação (CTA)", 2 if (cta_heroi and validos) else (1 if m["ctas"] else 0),
+          (f"no topo: \"{cta_heroi['texto']}\" -> {cta_heroi['destino']}" if cta_heroi else "nenhum CTA no topo")
+          + f"; {len(m['ctas'])} CTAs no total",
+          "" if cta_heroi else "CTA visível logo abaixo do H1")
+    obrig = sum(1 for f_ in m["formularios"] for x in f_["campos"] if x["obrigatorio"])
+    sem_dest = sum(1 for x in m["ctas"] if x["tipo"] in ("sem_href", "botao"))
+    quebr = sum(1 for l in m.get("links_testados", []) if l.get("status") and l["status"] >= 400)
+    lento = (m["http"].get("ttfb_ms") or 0) > 800
+    problemas = [x for x, v in (("campos obrigatórios: " + str(obrig), obrig > 4), ("CTAs sem link: " + str(sem_dest), sem_dest),
+                                ("links quebrados: " + str(quebr), quebr), ("servidor lento", lento)) if v]
+    pilar("Atrito (2 = pouco)", 2 if not problemas else (1 if len(problemas) == 1 else 0),
+          "; ".join(problemas) or "nada travando", "; ".join(problemas))
+    f = m["rastreamento"]["ferramentas"]
+    med = ("Meta Pixel" in f) + any(x in f for x in ("Google Analytics 4", "Google Tag Manager"))
+    pilar("Medição", med, ", ".join(f) or "nada no HTML", "" if med == 2 else "Meta Pixel e GA4/GTM")
+    a = m.get("arquivos_do_site", {})
+    desc = [x for x, v in (("title", t["title"]), ("description", t["meta_description"]), ("1 H1", t["h1_quantidade"] == 1),
+                           ("sitemap", a.get("sitemap", {}).get("status") == 200), ("dados estruturados", t["jsonld_tipos"]))
+            if v]
+    pilar("Descoberta (SEO)", 2 if len(desc) >= 4 else (1 if len(desc) >= 2 else 0), ", ".join(desc) or "nada",
+          ", ".join(x for x in ("title", "description", "1 H1", "sitemap", "dados estruturados") if x not in desc))
+    total = sum(x["nota"] for x in P)
+    return {"acima_da_dobra": acima, "pilares": P, "nota": total, "maximo": 2 * len(P)}
 
 
 # --------------------------------------------------------------------------
@@ -765,6 +1056,66 @@ def ler_arquivos(futs: dict) -> dict:
     return out
 
 
+def escolher_paginas_chave(mapa: dict, limite: int) -> list[str]:
+    base = mapa["url_final"].split("#")[0].rstrip("/")
+    vistos, out = set(), []
+    for l in mapa["links"]:
+        if l["tipo"] not in ("interno", "subdominio"):
+            continue
+        u = l["destino"].split("#")[0]
+        if not u or u.rstrip("/") == base or u in vistos or re.search(r"\.(pdf|jpe?g|png|webp|zip)$", u, re.I):
+            continue
+        if RE_CHAVE.search(l["texto"]) or RE_CHAVE.search(urlparse(u).path):
+            vistos.add(u)
+            out.append(u)
+    return out[:limite]
+
+
+def ler_pagina_chave(u: str, timeout: float) -> dict:
+    r = baixar(u, timeout)
+    info = {"url": u, "status": r["status"], "erro": r["erro"]}
+    if not r["texto"]:
+        return info
+    p = MapaParser(r["url_final"])
+    try:
+        p.feed(r["texto"])
+        p.close()
+    except Exception:  # noqa: BLE001
+        pass
+    p.finalizar()
+    texto = "\n".join(h["texto"] for h in p.headings) + "\n" + "\n".join(l for s_ in p.secoes for l in s_["linhas"])
+    if len(texto.split()) < 60:
+        texto += "\n" + "\n".join(texto_embutido(p.scripts_inline))
+    info.update({
+        "titulo": p.title, "palavras": len(texto.split()),
+        "cnpj": achar(RE_CNPJ, texto), "empresa": achar(RE_EMPRESA, texto)[:3],
+        "emails": achar(RE_EMAIL, texto)[:5], "telefones": achar(RE_TEL, texto)[:5],
+        "whatsapp": sorted({a["href"] for a in p.ancoras if "wa.me" in a["href"] or "whatsapp.com" in a["href"]}),
+        "precos": achar(RE_PRECO, texto)[:10],
+        "garantia": trechos(PADROES_TEXTO["garantia"], texto), "teste_gratis": trechos(PADROES_TEXTO["teste_gratis"], texto),
+        "cancelamento_livre": trechos(PADROES_TEXTO["cancelamento_livre"], texto),
+    })
+    return info
+
+
+def juntar_paginas_chave(mapa: dict, infos: list[dict]):
+    c, o, fontes = mapa["contato_e_confianca"], mapa["sinais_de_oferta"], mapa["contato_e_confianca"]["fontes"]
+    caminho = lambda u: urlparse(u).path or "/"  # noqa: E731
+    for i in infos:
+        for campo in ("cnpj", "empresa", "emails", "telefones", "whatsapp"):
+            novos = [x for x in i.get(campo, []) if x not in c[campo]]
+            if novos:
+                c[campo] = c[campo] + novos
+                fontes.setdefault(campo, []).append(caminho(i["url"]))
+        for campo in ("garantia", "teste_gratis", "cancelamento_livre"):
+            for t in i.get(campo, []):
+                marcado = f"{t} (em {caminho(i['url'])})"
+                if marcado not in o[campo]:
+                    o[campo].append(marcado)
+        if i.get("precos") and not mapa["numeros"]["precos"]:
+            mapa["numeros"]["precos_em_outras_paginas"] = {caminho(i["url"]): i["precos"]}
+
+
 def testar_links(links: list[dict], pool: ThreadPoolExecutor, timeout: float, limite: int = 40) -> list[dict]:
     alvos = []
     vistos = set()
@@ -794,25 +1145,42 @@ def para_md(m: dict, max_secao: int) -> str:
     h, seo, v = m["http"], m["seo"], m["verificacao"]
     L.append(f"# Scan: {m['url_final']}")
     L.append(f"Status {h['status']} · {h['ttfb_ms']} ms até o 1º byte · {h['total_ms']} ms total · "
-             f"{round((h['bytes'] or 0) / 1024)} KB · HTML via {m['origem_html']} · {m['quando']}")
+             f"{round((h['bytes'] or 0) / 1024)} KB · lido via {m['origem_html']} · {m['quando']}")
     if h.get("erro"):
-        L.append(f"**Erro:** {h['erro']}")
+        L.append(f"**Erro no HTTP:** {h['erro']}")
+    rx = m.get("raio_x")
+    if rx:
+        ad = rx["acima_da_dobra"]
+        L.append(f"\n## Raio-X de venda: {rx['nota']}/{rx['maximo']}")
+        L.append("| Pilar | Nota | O que o scan viu | O que falta |")
+        L.append("|---|---|---|---|")
+        for x in rx["pilares"]:
+            L.append(f"| {x['pilar']} | {x['nota']}/2 | {x['viu']} | {x['falta'] or '—'} |".replace("\n", " "))
+        L.append("\n## Acima da dobra (o que o visitante vê primeiro)")
+        L.append(f"- **H1:** {ad['h1'] or '— (sem H1)'}")
+        L.append(f"- **Logo abaixo:** {ad['subtitulo'] or '—'}")
+        cta = ad["primeiro_cta"]
+        L.append(f"- **Primeiro CTA:** " + (f"\"{cta['texto']}\" -> {cta['destino']}" if cta else "nenhum no topo"))
+    L.append("\n## Achados por gravidade")
+    L += [f"- {x}" for x in m["sinais"]] or ["- nenhum"]
+    if m.get("paginas_chave"):
+        L.append("\n## Páginas-chave lidas")
+        for i in m["paginas_chave"]:
+            achou = [k for k in ("cnpj", "empresa", "emails", "telefones", "whatsapp", "garantia", "teste_gratis", "precos") if i.get(k)]
+            L.append(f"- {i['status']} {i['url']}: " + (", ".join(achou) if achou else "nada relevante"))
     L.append(f"\n## Conferência do mapeamento: confiança {v['confianca'].upper()}")
     for c in v["checks"]:
         L.append(f"- {'✔' if c['ok'] else '✖'} {c['item']}: esperado {c['esperado']}, encontrado {c['encontrado']}"
                  + (f" ({c['nota']})" if c["nota"] else ""))
     L.append("Não coberto por este scan: " + "; ".join(v["lacunas"]))
 
-    L.append("\n## Sinais objetivos")
-    L += [f"- {x}" for x in m["sinais"]] or ["- nenhum"]
-
     L.append("\n## Estrutura (títulos na ordem)")
     for t in m["estrutura"][:80]:
         L.append(f"{'  ' * (t['nivel'] - 1)}- H{t['nivel']}: {t['texto']}")
 
-    L.append("\n## CTAs (texto → destino)")
+    L.append("\n## CTAs (texto -> destino)")
     for c in m["ctas"][:40]:
-        L.append(f"- \"{c['texto']}\" → {c['destino'] or '(sem link)'}")
+        L.append(f"- \"{c['texto']}\" -> {c['destino'] or '(sem link)'}")
     L.append(f"Links por tipo: {m['links_resumo']}")
 
     n = m["numeros"]
@@ -820,6 +1188,8 @@ def para_md(m: dict, max_secao: int) -> str:
     L.append(f"- Preços: {', '.join(n['precos']) or 'nenhum'}")
     L.append(f"- Percentuais: {', '.join(n['percentuais']) or 'nenhum'}")
     L.append(f"- Prova social numérica: {', '.join(n['prova_social_numerica']) or 'nenhuma'}")
+    if n.get("precos_em_outras_paginas"):
+        L.append(f"- Preços em outras páginas: {n['precos_em_outras_paginas']}")
     for k, vals in m["sinais_de_oferta"].items():
         L.append(f"- {k.replace('_', ' ')}: " + (" | ".join(vals) if vals else "não encontrado"))
 
@@ -836,6 +1206,9 @@ def para_md(m: dict, max_secao: int) -> str:
     L.append(f"- WhatsApp: {', '.join(c['whatsapp']) or 'não'} · Telefones: {', '.join(c['telefones']) or 'não'} · "
              f"E-mails: {', '.join(c['emails']) or 'não'} · CNPJ: {', '.join(c['cnpj']) or 'não'} · "
              f"Redes: {', '.join(c['redes']) or 'nenhuma'}")
+    L.append(f"- Empresa: {', '.join(c.get('empresa', [])) or 'não identificada'} · Políticas: "
+             f"{', '.join(urlparse(x).path for x in c.get('politicas', [])) or 'nenhuma'}"
+             + (f" · Achado em: {c['fontes']}" if c.get("fontes") else ""))
 
     r = m["rastreamento"]
     L.append("\n## Rastreamento e tecnologia")
@@ -894,6 +1267,15 @@ def comparativo_md(mapas: list[dict]) -> str:
             " ".join(m["identidade_visual"]["cores_de_destaque"][:3]) or "—",
             ", ".join(m["identidade_visual"]["fontes"][:2]) or "—",
         ]) + " |")
+    pil = [x["pilar"] for x in mapas[0]["raio_x"]["pilares"]] if mapas and mapas[0].get("raio_x") else []
+    if pil:
+        L.append("\n## Raio-X lado a lado (0 a 2 por pilar)")
+        L.append("| Site | " + " | ".join(pil) + " | Total |")
+        L.append("|" + "---|" * (len(pil) + 2))
+        for m in mapas:
+            rx = m["raio_x"]
+            L.append(f"| {urlparse(m['url_final']).netloc} | " + " | ".join(str(x["nota"]) for x in rx["pilares"])
+                     + f" | {rx['nota']}/{rx['maximo']} |")
     L.append("\n## H1 de cada site")
     for m in mapas:
         L.append(f"- **{urlparse(m['url_final']).netloc}**: {' | '.join(m['seo']['h1']) or '—'}")
@@ -910,6 +1292,25 @@ def comparativo_md(mapas: list[dict]) -> str:
 # --------------------------------------------------------------------------
 
 
+import threading  # noqa: E402
+
+TRAVA_NAVEGADOR = threading.Lock()
+
+
+def palavras_html(html: str) -> int:
+    corpo = re.sub(r"<(script|style|noscript|template|svg)\b.*?</\1>", " ", html or "", flags=re.S | re.I)
+    return len(re.sub(r"<[^>]+>", " ", corpo).split())
+
+
+def parece_spa(html: str) -> bool:
+    if not html:
+        return False
+    raiz = re.search(r"<div[^>]+id=[\"'](root|__next|app|__nuxt|svelte)[\"']", html, re.I)
+    scripts = len(re.findall(r"<script\b", html, re.I))
+    p = palavras_html(html)
+    return (bool(raiz) and p < 150) or (p < 40 and scripts >= 2)
+
+
 def escanear(url: str, args, pool: ThreadPoolExecutor, pasta: Path) -> dict:
     sem_esquema = not re.match(r"https?://", url)
     if sem_esquema:
@@ -924,10 +1325,14 @@ def escanear(url: str, args, pool: ThreadPoolExecutor, pasta: Path) -> dict:
     html, origem = resp["texto"], "http"
     slug = slug_de(url)
     render = None
-    if args.render:
-        render = renderizar(url, args.timeout * 2, args.print, pasta, slug)
-        if render.get("html"):
-            html, origem = render["html"], "navegador"
+    motivo = ("pedido" if (args.render or args.print) else "bloqueio" if resp["bloqueado"]
+              else "sem resposta HTTP" if resp["status"] is None else "site em JavaScript" if parece_spa(html) else None)
+    if motivo and args.navegador != "nenhum":
+        with TRAVA_NAVEGADOR:
+            render = renderizar(url, args.timeout * 2, args.print, pasta, slug, args.navegador)
+        if render.get("html") and palavras_html(render["html"]) >= palavras_html(html):
+            html, origem = render["html"], render["motor"]
+        render["motivo"] = motivo
 
     # CSS externo em paralelo (cores e fontes moram aqui)
     css_extra = ""
@@ -943,14 +1348,20 @@ def escanear(url: str, args, pool: ThreadPoolExecutor, pasta: Path) -> dict:
                               if r["status"] == 200)
 
     mapa = montar_mapa(url, resp, html, css_extra, ler_arquivos(futs_arquivos), origem)
+    mapa["bloqueado"] = resp["bloqueado"]
     if render:
-        mapa["render"] = {k: render.get(k) for k in ("erro", "total_ms", "console_erros")}
+        mapa["render"] = {k: render.get(k) for k in ("motivo", "motor", "erro", "total_ms", "console_erros")}
         mapa["prints"] = render.get("prints", [])
-        if render.get("erro"):
-            mapa["verificacao"]["lacunas"].insert(0, f"Render falhou: {render['erro']}")
+        if render.get("erro") and not render.get("html"):
+            mapa["verificacao"]["lacunas"].insert(0, f"Navegador não abriu ({render['motivo']}): {render['erro']}")
+    if args.paginas:
+        urls_chave = escolher_paginas_chave(mapa, args.paginas)
+        mapa["paginas_chave"] = list(pool.map(lambda u: ler_pagina_chave(u, args.timeout), urls_chave))
+        juntar_paginas_chave(mapa, mapa["paginas_chave"])
     if args.links:
         mapa["links_testados"] = testar_links(mapa["links"], pool, args.timeout)
-        mapa["sinais"] = sinais(mapa)
+    mapa["sinais"] = sinais(mapa)
+    mapa["raio_x"] = raio_x(mapa)
     mapa["tempo_scan_ms"] = round((time.perf_counter() - t0) * 1000)
 
     (pasta / f"{slug}.json").write_text(json.dumps(mapa, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -960,6 +1371,11 @@ def escanear(url: str, args, pool: ThreadPoolExecutor, pasta: Path) -> dict:
 
 
 def main(argv=None):
+    for fluxo in (sys.stdout, sys.stderr):  # terminal do Windows (cp1252) não quebra com acentos e símbolos
+        try:
+            fluxo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description="scan-ultra: mapa rápido e conferido de páginas web")
     ap.add_argument("urls", nargs="*", help="uma ou mais URLs")
     ap.add_argument("--arquivo", help="arquivo com uma URL por linha")
@@ -968,12 +1384,13 @@ def main(argv=None):
     ap.add_argument("--timeout", type=float, default=20.0)
     ap.add_argument("--css", type=int, default=4, help="quantas folhas de CSS externas baixar (0 desliga)")
     ap.add_argument("--links", action="store_true", help="testar links internos (até 40)")
-    ap.add_argument("--render", action="store_true", help="renderizar com navegador (Playwright)")
-    ap.add_argument("--print", action="store_true", help="salvar prints desktop e mobile (liga --render)")
+    ap.add_argument("--render", action="store_true", help="forçar leitura pelo navegador")
+    ap.add_argument("--print", action="store_true", help="salvar prints desktop e mobile")
+    ap.add_argument("--navegador", default="auto", choices=["auto", "playwright", "chrome", "nenhum"],
+                    help="auto: Playwright se houver, senão Chrome/Edge/Brave do computador; nenhum: só HTTP")
+    ap.add_argument("--paginas", type=int, default=6, help="páginas-chave para ler (preços, termos, contato...); 0 desliga")
     ap.add_argument("--max-secao", type=int, default=1500, help="caracteres por seção no .md")
     args = ap.parse_args(argv)
-    if args.print:
-        args.render = True
 
     urls = list(args.urls)
     if args.arquivo:
@@ -985,28 +1402,29 @@ def main(argv=None):
     pasta.mkdir(parents=True, exist_ok=True)
 
     t0 = time.perf_counter()
-    # pool interno para downloads; pool externo para páginas (render não é thread-safe → sequencial)
+    # pool interno para downloads; pool externo para páginas; o navegador é usado um de cada vez (trava)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        if args.render:
-            mapas = [escanear(u, args, pool, pasta) for u in urls]
-        else:
-            with ThreadPoolExecutor(max_workers=min(8, len(urls))) as externo:
-                mapas = list(externo.map(lambda u: escanear(u, args, pool, pasta), urls))
+        with ThreadPoolExecutor(max_workers=min(8, len(urls))) as externo:
+            mapas = list(externo.map(lambda u: escanear(u, args, pool, pasta), urls))
 
     for m in mapas:
-        v = m["verificacao"]
-        print(f"[{m['http']['status']}] {m['url_final']}  {m['tempo_scan_ms']} ms  confiança {v['confianca']}  "
-              f"{m['seo']['palavras_visiveis']} palavras  {len(m['ctas'])} CTAs  → {m['_arquivos'][1]}")
+        v, rx = m["verificacao"], m["raio_x"]
+        via = m["origem_html"]
+        print(f"[{m['http']['status']}] {m['url_final']}  {m['tempo_scan_ms']} ms  via {via}  confianca {v['confianca']}  "
+              f"Raio-X {rx['nota']}/{rx['maximo']}  {m['seo']['palavras_visiveis']} palavras  -> {m['_arquivos'][1]}")
+        if m["seo"]["palavras_visiveis"] == 0:
+            print("   ! nada lido. Motivo: " + (m["http"].get("erro") or "conteúdo montado por JavaScript")
+                  + (f" | navegador: {m['render']['erro']}" if m.get("render", {}).get("erro") else ""))
     if len(mapas) > 1:
         (pasta / "comparativo.md").write_text(comparativo_md(mapas), encoding="utf-8")
         (pasta / "comparativo.json").write_text(json.dumps(
             [{k: m[k] for k in ("url_final", "http", "seo", "numeros", "sinais_de_oferta", "contato_e_confianca",
-                                "rastreamento", "identidade_visual", "sinais")} for m in mapas],
+                                "rastreamento", "identidade_visual", "sinais", "raio_x")} for m in mapas],
             ensure_ascii=False, indent=1), encoding="utf-8")
-        print(f"comparativo → {pasta / 'comparativo.md'}")
-    print(f"total: {len(mapas)} página(s) em {round(time.perf_counter() - t0, 2)} s")
-    baixa = [m for m in mapas if m["verificacao"]["confianca"] == "baixa"]
-    return 2 if baixa and len(baixa) == len(mapas) else 0
+        print(f"comparativo -> {pasta / 'comparativo.md'}")
+    print(f"total: {len(mapas)} pagina(s) em {round(time.perf_counter() - t0, 2)} s")
+    nada = [m for m in mapas if m["seo"]["palavras_visiveis"] == 0]
+    return 2 if len(nada) == len(mapas) else 0
 
 
 if __name__ == "__main__":

@@ -423,6 +423,11 @@ h1,h2,h3{{line-height:1.2}} pre{{background:#f4f6f7;padding:12px;white-space:pre
 # --------------------------------------------------------------------------
 
 def main(argv=None):
+    for fluxo in (sys.stdout, sys.stderr):  # terminal do Windows (cp1252) não quebra com acentos e símbolos
+        try:
+            fluxo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description="mega-plano: plano de ação em PDF + arquivo para IA")
     ap.add_argument("json", help="plano.json")
     ap.add_argument("--saida", default="plano-final")

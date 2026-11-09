@@ -39,6 +39,8 @@ Pegar tudo que as análises anteriores provaram (`scan-ultra`, `pare-de-pensar-c
 
 ## O processo
 
+No Windows, troque `python3` por `py` nos comandos.
+
 ### Etapa 0: perguntas antes de começar
 Pergunte ao usuário, ou tire do material das skills anteriores. O que faltar, assuma e marque como suposição:
 - Tem site? Qual URL? Tem Instagram? Qual @? Tem outros canais (WhatsApp, Google, marketplace, YouTube, TikTok)?

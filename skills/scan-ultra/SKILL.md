@@ -1,66 +1,100 @@
 ---
 name: scan-ultra
-description: Use antes de analisar qualquer site, landing page ou concorrente. Lê a página inteira em segundos com código, gera um mapa estruturado, confere o mapa e entrega para a análise.
+description: Use antes de analisar qualquer site, landing page ou concorrente. Roda um script que lê a página e as páginas-chave em segundos e entrega um Raio-X de venda conferido.
 ---
 
 # Scan Ultra
 
-## Para que serve
+## Regra número 1: rode o script
 
-Ler uma página aos pedaços (buscar, abrir, resumir, abrir de novo) é lento e deixa buracos. O Scan Ultra baixa tudo de uma vez, em paralelo, e transforma a página em um mapa: títulos, textos por seção, CTAs e para onde levam, preços, percentuais, prova social, garantia, teste grátis, urgência, formulários, WhatsApp, CNPJ, redes, pixel, GA, GTM, stack, SEO, cores e fontes do CSS, robots.txt, sitemap e llms.txt. Depois confere se o mapa bate com o HTML. Só então a análise começa.
-
-## Passo 1: rodar o scan
-
-O script fica em `scripts/scan.py`, dentro da pasta desta skill. Só usa Python 3 padrão.
+Esta skill é um **programa**. Não substitua o script por extensão de navegador, por "abrir a página e ler", por busca na web nem por ferramenta de leitura de páginas. Essas vias só valem quando o script já rodou e disse, com o motivo, que não conseguiu (veja "Quando der erro").
 
 ```bash
-# uma página
-python3 <pasta-da-skill>/scripts/scan.py https://site.com --links
-
-# o site e os concorrentes de uma vez (rodam em paralelo e geram comparativo.md)
-python3 <pasta-da-skill>/scripts/scan.py https://site.com https://concorrente1.com https://concorrente2.com
-
-# site feito em JavaScript (React, Next, Lovable, Vite...) ou quando precisar ver o visual
-python3 <pasta-da-skill>/scripts/scan.py https://site.com --print
+python3 <pasta-desta-skill>/scripts/scan.py https://site.com --links
 ```
 
+**No Windows**, use `python` ou `py` no lugar de `python3`:
+
+```bash
+py <pasta-desta-skill>\scripts\scan.py https://site.com --links
+```
+
+Com concorrentes, todos rodam em paralelo e sai um `comparativo.md`:
+
+```bash
+python3 <pasta-desta-skill>/scripts/scan.py https://site.com https://concorrente1.com https://concorrente2.com
+```
+
+## O que o script faz sozinho
+
+1. **Lê por HTTP como um navegador de verdade.** Os cabeçalhos são de Chrome, o que passa pela maioria dos firewalls. Se o certificado falhar (comum no Python do macOS), tenta de novo com `certifi`.
+2. **Abre um navegador sem janela quando precisa.** Isso acontece em três casos:
+   - o site é montado em JavaScript (React, Next, Vite, Lovable, Bubble…);
+   - o site bloqueia robôs (Cloudflare, 403);
+   - o HTTP falhou.
+
+   A ordem de tentativa é: Playwright, se estiver instalado; depois o **Chrome, Edge, Brave ou Chromium do próprio computador**. Nada precisa ser instalado para isso.
+3. **Recupera texto de dados embutidos** (Next.js, JSON da página) se nenhum navegador abrir.
+4. **Lê sozinho as páginas-chave:** preços, termos, privacidade, reembolso, contato, sobre, FAQ. Ali costumam estar CNPJ, razão social, garantia e contato que a página principal não mostra. O relatório diz em qual página cada item foi achado.
+5. **Monta o Raio-X de venda e confere o próprio mapa** contra o HTML.
+
 Opções úteis:
-- `--saida PASTA` para escolher onde salvar (padrão `./scan-ultra-saida`).
-- `--arquivo urls.txt` para passar uma lista, uma URL por linha.
-- `--links` testa até 40 links internos e acusa os quebrados.
-- `--render` usa navegador (Playwright). `--print` também salva prints desktop e mobile.
-- `--css 0` pula o download de CSS, se a pressa for extrema.
+- `--print`: prints de computador e celular, a única forma de julgar o visual;
+- `--links`: testa até 40 links internos;
+- `--paginas 0`: não lê as páginas-chave;
+- `--navegador nenhum`: só HTTP;
+- `--saida PASTA`: escolhe onde salvar (padrão: `scan-ultra-saida`);
+- `--arquivo urls.txt`: lista de URLs.
 
-Para cada URL saem `<site>.json` (mapa completo) e `<site>.md` (resumo para leitura rápida). Com mais de uma URL, sai também `comparativo.md`.
+## Como ler o resultado
 
-Leia o `.md` primeiro. Vá ao `.json` só quando precisar de algo que o `.md` cortou (texto longo de seção, lista completa de links).
+Para cada URL saem `<site>.md` (leia primeiro) e `<site>.json` (tudo, para quando precisar de um detalhe). O `.md` vem nesta ordem estratégica:
 
-## Passo 2: conferir o mapeamento
+1. **Raio-X de venda.** Oito pilares com nota de 0 a 2 cada, o que o scan viu e o que falta:
+   - **Promessa:** H1 com número ou resultado concreto;
+   - **Oferta:** preço, garantia, teste, urgência, bônus;
+   - **Prova:** números de clientes, depoimentos;
+   - **Confiança:** empresa ou CNPJ, contato, políticas, redes;
+   - **Ação:** CTA logo abaixo do H1, com destino real;
+   - **Atrito:** campos obrigatórios, CTAs sem link, links quebrados, lentidão;
+   - **Medição:** Meta Pixel, GA4/GTM;
+   - **Descoberta:** title, description, H1, sitemap, dados estruturados.
+2. **Acima da dobra:** o H1, o que vem logo abaixo e o primeiro CTA. É o que o visitante vê nos 3 primeiros segundos.
+3. **Achados por gravidade:** ALTA, MÉDIA, BAIXA.
+4. **Páginas-chave lidas** e o que veio de cada uma.
+5. **Conferência do mapeamento,** com confiança alta, média ou baixa.
+6. Detalhes: estrutura, CTAs, oferta, formulários, contato, rastreamento, SEO, cores e fontes, texto por seção.
 
-Todo `.md` começa com **"Conferência do mapeamento"**. O script compara o próprio mapa com o HTML bruto: links, títulos, formulários, imagens e preços. Também avisa se a página depende de JavaScript.
+As notas do Raio-X são **automáticas e mecânicas**: medem presença, não qualidade. "Promessa 2/2" quer dizer que existe H1 com número, não que a promessa é boa. Julgar a qualidade é trabalho da análise seguinte.
 
-- **Confiança alta:** siga para a análise.
+## Conferir antes de analisar
+
+- **Confiança alta:** siga.
 - **Confiança média:** leia os itens com ✖ e diga na análise o que pode estar incompleto.
-- **Confiança baixa:** não analise ainda. O motivo mais comum é página montada em JavaScript. Rode de novo com `--render`. Se não houver Playwright, instale (`pip install playwright && playwright install chromium`). Se a instalação não for possível, use a ferramenta de navegador ou de busca disponível e marque a análise inteira como incompleta.
+- **Confiança baixa:** leia o motivo, que o script imprime ao lado do resultado, e siga "Quando der erro".
 
-Depois, faça a sua própria conferência rápida, porque o script não entende contexto:
-1. O H1 do mapa é mesmo a promessa principal da página?
-2. Os preços encontrados são da oferta, ou de exemplos e simulações? Separe os dois.
-3. Algum CTA aparece com "(botão, ação via JavaScript)"? Ele pode não levar a lugar nenhum. Anote como item para testar.
-4. Os "Sinais objetivos" fazem sentido? Ausência de pixel no HTML não prova ausência de pixel (ele pode carregar via GTM). Diga "não encontrado no HTML", nunca "não tem".
-5. Se rodou com `--print`, abra os prints. É a única forma de julgar o visual.
+Depois, em 3 a 6 linhas, faça a sua conferência:
+1. O H1 é mesmo a promessa principal?
+2. Os preços são da oferta ou de exemplos e simulações?
+3. CTAs "sem link" levam a algum lugar? Anote como item para testar.
+4. "Não encontrado no HTML" não é o mesmo que "não tem". Pixel via GTM, por exemplo, pode não aparecer.
 
-Escreva o resultado em 3 a 6 linhas: o que o mapa cobre, o que ficou de fora e a confiança final.
+## Quando der erro
 
-## Passo 3: entregar para a análise
+| O que aparece | O que fazer |
+|---|---|
+| `python3` não é reconhecido (Windows) | Use `py` ou `python` |
+| `CERTIFICATE_VERIFY_FAILED` | `pip install certifi`. No macOS, abra também "Install Certificates.command" na pasta do Python |
+| "nada lido… conteúdo montado por JavaScript" e "nenhum Chrome/Edge… encontrado" | Instale o Chrome, ou rode `pip install playwright && playwright install chromium`, ou indique o navegador com a variável `SCAN_ULTRA_CHROME` |
+| "travou ao abrir a página" | Comum em servidor ou contêiner. Instale o Playwright (linha acima) |
+| O site bloqueia robôs e o navegador também é barrado | Rode com `--print`, abra o print e diga ao usuário que o site exige verificação humana |
+| `Tunnel connection failed` / 403 de proxy | A rede onde a IA roda bloqueia sites. Rode no computador do usuário, ou só então use a ferramenta de leitura de páginas, avisando que não houve conferência automática |
 
-O mapa é a matéria-prima. Ele não é a análise. Passe para a próxima skill (`pare-de-pensar-como-ia`, ou a sequência inteira em `analise-ultra`) com:
-- o caminho do `.md` de cada página;
-- a conferência do Passo 2;
-- os "Sinais objetivos", que viram evidência `[TESTADO]` na análise.
+## Entregar para a análise
 
-Tudo que veio do scan conta como `[TESTADO]`. Tudo que o scan não cobre (visual sem print, clique, checkout, área logada) continua `[HIPÓTESE]` até alguém testar.
+Passe para a próxima skill (`pare-de-pensar-como-ia`, ou a sequência inteira em `analise-ultra`):
+- o caminho do `.md`;
+- a sua conferência;
+- o Raio-X.
 
-## Quando o script não pode rodar
-
-Se não houver terminal, ou se a rede do terminal estiver bloqueada (erro de proxy, 403 no túnel), use a ferramenta de leitura de páginas disponível e peça a mesma estrutura do mapa: títulos, texto por seção, CTAs com destino, preços, sinais de oferta, contato, rastreadores, SEO. Avise que o mapa foi montado sem conferência automática.
+Tudo que veio do scan é `[TESTADO]`. O que o scan não cobre (visual sem print, clique, checkout, área logada) continua `[HIPÓTESE]`.

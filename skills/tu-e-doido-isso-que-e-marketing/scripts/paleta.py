@@ -91,6 +91,11 @@ def ler_concorrentes(args) -> dict[str, list[str]]:
 
 
 def main(argv=None):
+    for fluxo in (sys.stdout, sys.stderr):  # terminal do Windows (cp1252) não quebra com acentos e símbolos
+        try:
+            fluxo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--cores", required=True, help="cores propostas, separadas por vírgula")
     ap.add_argument("--comparativo", help="comparativo.json do scan-ultra")
