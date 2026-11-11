@@ -12,7 +12,7 @@ scan-ultra → pare-de-pensar-como-ia → teu-saas-e-uma-merda → tu-e-doido-is
 | Skill | O que faz |
 |---|---|
 | **scan-ultra** | Lê o site e os concorrentes em segundos, com Python. Passa por firewall, abre sites feitos em JavaScript usando o Chrome/Edge do próprio computador, lê sozinho as páginas de termos, preços e contato, e entrega um **Raio-X de venda** (promessa, oferta, prova, confiança, CTA, atrito, medição, SEO) conferido contra o HTML. |
-| **pare-de-pensar-como-ia** | Começa por "isso vende?". Depois vêm 5 pessoas (vendas; artista sem dinheiro; crescimento; técnico; crítico) e um confronto entre o que a IA pensou e o que elas viram. |
+| **pare-de-pensar-como-ia** | Começa por "isso vende?". Depois vêm 5 pessoas (vendas; artista sem dinheiro; crescimento; técnico; crítico), cada uma com uma mente montada a partir dos melhores da área: escola, perguntas, roteiro, testes e números com fonte. Um mapa diz o que cada uma roda em site, anúncio, oferta, copy, funil, produto, estratégia e perfil, com régua para Brasil e para fora. No fim, um confronto entre o que a IA pensou e o que elas viram. |
 | **teu-saas-e-uma-merda** | Jobs, Wozniak, Huang e Bezos, a partir de mapas mentais tirados de livros e cartas, atacam o produto em 5 rodadas. Toda acusação precisa de prova. |
 | **tu-e-doido-isso-que-e-marketing** | 10 mestres (Ogilvy, Schwartz, Hopkins, Hormozi, Brunson, Sean Ellis, Ries e Trout, Byron Sharp, Gary Vee, Aaron Ross) montam o plano: concorrentes, aquisição, copy, paleta provada por código, Instagram, oferta, 3 ofertas, 90 dias e conteúdo com sinal real. |
 | **mega-plano** | Reclassifica tudo por prioridade (ICE) e gera o **plano de ação em PDF**, o **arquivo para colar em qualquer IA** e o **checklist** para Trello, Notion ou Sheets. |
