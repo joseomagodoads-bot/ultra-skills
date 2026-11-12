@@ -1,0 +1,21 @@
+{
+ "id": "tecnico",
+ "nome": "Técnico (funciona, velocidade, medição, robôs)",
+ "origem": "Google web.dev e Search Central, documentação Meta e GA4, WCAG 2.2, Baymard, Vercel e MERJ",
+ "como_avaliar": "Conferência, rastreamento, SEO, links testados e páginas-chave do scan. PageSpeed (modo celular) quando houver. Gravidade: S1 impede comprar ou medir; S2 perde parte; S3 capricho.",
+ "criterios": [
+  {"id": "funciona", "dimensao": "tecnico", "peso": 3, "pergunta": "Botões, links, formulário e checkout funcionam?", "como_medir": "Links testados (--links), CTAs sem destino, console.", "escala": {"0": "S1 aberto (não dá para comprar)", "5": "S2 (perde parte)", "10": "tudo funciona"}},
+  {"id": "velocidade", "dimensao": "tecnico", "peso": 2, "pergunta": "LCP ≤ 2,5 s, INP ≤ 200 ms, CLS ≤ 0,1 no celular?", "como_medir": "PageSpeed modo celular. Sem medição, 1º byte do scan como pista.", "escala": {"0": "LCP > 4 s", "5": "entre 2,5 e 4 s", "10": "passa nas três"}},
+  {"id": "medicao", "dimensao": "medicao", "peso": 3, "pergunta": "Pixel e analytics instalados e a compra é medida?", "como_medir": "Rastreamento do scan; evento Purchase volta do checkout? Deduplicação navegador + servidor.", "escala": {"0": "nada ou compra não volta", "5": "instalado, compra incerta", "10": "funil inteiro medido"}},
+  {"id": "html_cru", "dimensao": "seo", "peso": 2, "pergunta": "O conteúdo existe no HTML sem JavaScript?", "como_medir": "Scan lido via http com texto suficiente vs só via navegador.", "escala": {"0": "vazio sem JS", "5": "parcial", "10": "completo"}},
+  {"id": "indexacao", "dimensao": "seo", "peso": 2, "pergunta": "robots, canonical, sitemap e indexação certos?", "como_medir": "Arquivos do site no scan; busca site:dominio.", "escala": {"0": "bloqueado ou noindex", "5": "falta sitemap ou canonical", "10": "tudo certo"}},
+  {"id": "dados_estruturados", "dimensao": "seo", "peso": 1, "pergunta": "JSON-LD relevante (organização, produto, FAQ)?", "como_medir": "JSON-LD do scan.", "escala": {"0": "nenhum", "5": "genérico", "10": "completo e verdadeiro"}},
+  {"id": "compartilhamento", "dimensao": "tecnico", "peso": 1, "pergunta": "Prévia do link certa (título, descrição, imagem no próprio domínio)?", "como_medir": "og:title, og:image do scan.", "escala": {"0": "quebrada ou de outro domínio", "5": "falta algo", "10": "completa"}},
+  {"id": "acessibilidade", "dimensao": "atrito", "peso": 1, "pergunta": "Contraste, alvo de toque, alt e formulário acessíveis?", "como_medir": "Imagens sem alt, contraste, botões pequenos.", "escala": {"0": "barreiras graves", "5": "algumas falhas", "10": "acessível"}}
+ ],
+ "numeros_de_bolso": [
+  {"dado": "Régua: LCP ≤ 2,5 s, INP ≤ 200 ms, CLS ≤ 0,1 no 75º percentil", "fonte": "Google web.dev"},
+  {"dado": "0,1 s a menos no celular: +8,4% de conversão no varejo", "fonte": "Deloitte para o Google", "ano": 2020},
+  {"dado": "Robôs de IA (GPTBot, ClaudeBot) não executam JavaScript", "fonte": "Vercel e MERJ", "ano": 2024}
+ ]
+}

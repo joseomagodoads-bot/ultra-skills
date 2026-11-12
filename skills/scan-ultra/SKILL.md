@@ -98,3 +98,13 @@ Passe para a próxima skill (`pare-de-pensar-como-ia`, ou a sequência inteira e
 - o Raio-X.
 
 Tudo que veio do scan é `[TESTADO]`. O que o scan não cobre (visual sem print, clique, checkout, área logada) continua `[HIPÓTESE]`.
+
+## Logos e modo agentes
+
+O scan baixa os logos encontrados (`<slug>-logo-N.ext`, listados em `identidade_visual.logos`). Para testar um logo nos tamanhos de ícone, em uma cor e invertido:
+
+```bash
+python3 ~/.ultra-skills/ultra.py logo-teste caminho/do/logo.png
+```
+
+Na análise completa, use `ultra.py iniciar URL --concorrentes A B --print`. Ele roda este scan, os logos e as folhas de teste de uma vez, e o agente `ultra-design` avalia o logo pela biblioteca `logo` (11 critérios: tamanho pequeno, uma cor, invertido, distinção, etc.).

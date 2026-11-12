@@ -1,0 +1,23 @@
+{
+ "id": "copy",
+ "nome": "Copy (título, página, e-mail, roteiro)",
+ "origem": "Eugene Schwartz, David Ogilvy, Claude Hopkins, John Caples, Joe Sugarman",
+ "como_avaliar": "Leia só títulos e botões primeiro (Estrutura e CTAs do scan). Depois o texto por seção. Compare a promessa com 5 concorrentes do comparativo.",
+ "criterios": [
+  {"id": "consciencia", "dimensao": "promessa", "peso": 3, "pergunta": "A primeira tela fala no nível de consciência de quem chega?", "como_medir": "De onde vem o tráfego (anúncio frio, busca, remarketing)? A abertura combina?", "escala": {"0": "fala de produto para quem nem sabe do problema", "5": "acerta parcialmente", "10": "abre exatamente onde o leitor está"}},
+  {"id": "sofisticacao", "dimensao": "diferencial", "peso": 2, "pergunta": "A promessa sobrevive num mercado que já ouviu tudo?", "como_medir": "Os 5 concorrentes prometem o mesmo? Existe mecanismo ou identificação?", "escala": {"0": "mesma promessa do mercado", "5": "promessa maior sem mecanismo", "10": "mecanismo ou ângulo novo com prova"}},
+  {"id": "titulo", "dimensao": "promessa", "peso": 3, "pergunta": "O título promete benefício específico (número, prazo, para quem)?", "como_medir": "Teste do 'qualquer um': troque o nome da marca. Ainda serve?", "escala": {"0": "serve para qualquer um", "5": "benefício vago", "10": "específico e só deste negócio"}},
+  {"id": "beneficio", "dimensao": "promessa", "peso": 2, "pergunta": "Fala de resultado ou de recurso?", "como_medir": "Conte frases de recurso vs de resultado no texto por seção.", "escala": {"0": "lista de recursos", "5": "misturado", "10": "cada recurso vira resultado"}},
+  {"id": "prova_colada", "dimensao": "prova", "peso": 2, "pergunta": "Toda promessa vem seguida de prova?", "como_medir": "Promessa → número, demonstração, depoimento logo depois?", "escala": {"0": "promessas soltas", "5": "prova longe da promessa", "10": "prova colada em cada promessa"}},
+  {"id": "objecoes", "dimensao": "confianca", "peso": 2, "pergunta": "As objeções reais estão respondidas na ordem em que aparecem?", "como_medir": "Objeções de avaliações e Reclame Aqui vs FAQ e texto.", "escala": {"0": "nenhuma", "5": "FAQ genérico", "10": "objeções reais, respondidas no ponto certo"}},
+  {"id": "voz_cliente", "dimensao": "linguagem", "peso": 2, "pergunta": "Usa as palavras que os clientes usam?", "como_medir": "Compare com avaliações e comentários reais.", "escala": {"0": "jargão de marketing", "5": "neutro", "10": "frases de cliente real"}},
+  {"id": "pedido", "dimensao": "acao", "peso": 2, "pergunta": "O pedido é claro e o botão diz o que acontece?", "como_medir": "Texto dos CTAs no scan: 'Saiba mais' vs 'Comprar por R$ 97'.", "escala": {"0": "botões vagos", "5": "claro mas sem valor", "10": "diz a ação e o ganho"}},
+  {"id": "especificidade", "dimensao": "prova", "peso": 1, "pergunta": "Número e nome no lugar de adjetivo?", "como_medir": "Conte adjetivos vazios (rápido, completo, inovador) vs números.", "escala": {"0": "só adjetivo", "5": "metade", "10": "números e nomes"}}
+ ],
+ "referencias": [
+  {"fonte": "Eugene Schwartz, Breakthrough Advertising", "ano": 1966, "ideia": "níveis de consciência e estágios de sofisticação"},
+  {"fonte": "David Ogilvy, Ogilvy on Advertising", "ano": 1983, "ideia": "o título faz a maior parte do trabalho; pesquisa antes de escrever"},
+  {"fonte": "Claude Hopkins, Scientific Advertising", "ano": 1923, "ideia": "especificidade e teste"},
+  {"fonte": "Joe Sugarman, The Adweek Copywriting Handbook", "ano": 2007, "ideia": "cada frase serve para a próxima ser lida"}
+ ]
+}

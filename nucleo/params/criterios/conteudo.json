@@ -1,0 +1,15 @@
+{
+ "id": "conteudo",
+ "nome": "Conteúdo orgânico",
+ "origem": "Gary Vaynerchuk, Eugene Schwartz, Byron Sharp",
+ "como_avaliar": "Cada ideia nasce de um sinal real (comentário, busca, reclamação, avaliação, notícia, dado) com fonte. Sem sinal, a ideia não entra.",
+ "criterios": [
+  {"id": "sinal_real", "dimensao": "conteudo", "peso": 3, "pergunta": "Cada ideia aponta o sinal real que a originou?", "como_medir": "Fonte com link ou descrição verificável.", "escala": {"0": "ideias da cabeça da IA", "5": "metade com sinal", "10": "todas com sinal"}},
+  {"id": "gancho", "dimensao": "conteudo", "peso": 3, "pergunta": "Os primeiros 3 segundos fazem parar e dizem para quem é?", "como_medir": "Leia só a primeira frase de cada ideia.", "escala": {"0": "começo genérico", "5": "curioso sem público", "10": "para e filtra"}},
+  {"id": "nativo", "dimensao": "conteudo", "peso": 2, "pergunta": "Parece conteúdo da plataforma ou propaganda?", "como_medir": "Formato, ritmo e linguagem do feed.", "escala": {"0": "propaganda", "5": "meio a meio", "10": "nativo"}},
+  {"id": "valor_antes", "dimensao": "conteudo", "peso": 2, "pergunta": "Entrega valor antes de pedir?", "como_medir": "Proporção topo/meio/fundo.", "escala": {"0": "só pede", "5": "pede cedo", "10": "valor primeiro, pedido no ponto"}},
+  {"id": "serie", "dimensao": "conteudo", "peso": 2, "pergunta": "Existe uma série repetível que dá para fazer toda semana?", "como_medir": "Formato com nome e estrutura fixa.", "escala": {"0": "posts soltos", "5": "tema recorrente", "10": "série com formato fixo"}},
+  {"id": "diferente", "dimensao": "diferencial", "peso": 2, "pergunta": "Só esta marca poderia publicar isso?", "como_medir": "Teste do 'qualquer um' em cada ideia.", "escala": {"0": "qualquer um publicaria", "5": "metade", "10": "único da marca"}}
+ ],
+ "proibidos": ["5 dicas para…", "você sabia que…", "o erro que todo mundo comete (sem dado)", "frase motivacional", "conteúdo que serviria para qualquer marca do nicho"]
+}

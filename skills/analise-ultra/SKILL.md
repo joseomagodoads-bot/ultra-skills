@@ -1,61 +1,66 @@
 ---
 name: analise-ultra
-description: Use quando pedirem análise completa de um site, SaaS ou produto com plano de marketing. Roda scan-ultra, pare-de-pensar-como-ia, teu-saas-e-uma-merda, tu-e-doido-isso-que-e-marketing e mega-plano (PDF).
+description: Use quando pedirem análise completa ou "análise ultra" de site, SaaS, produto ou oferta. Orquestra 24 agentes por parâmetros (pessoas, fundadores, conselho de vendas, marketing) até o plano em PDF.
 ---
 
-# Análise Ultra (orquestrador)
+# Análise Ultra (orquestrador de agentes)
 
-## A sequência
+Você é o orquestrador. Não analisa no lugar dos agentes: chama cada um com a tarefa certa, em paralelo quando a rodada permite, e deixa o motor `ultra.py` juntar tudo.
 
-| # | Skill | O que faz | Saída |
+## O sistema
+
+| # | Conselho | Agentes | O que sai |
 |---|---|---|---|
-| 1 | `scan-ultra` | Lê o site e os concorrentes em segundos, com código, e confere o mapa | `01-scan/` |
-| 2 | `pare-de-pensar-como-ia` | Isso vende? As 5 pessoas e o confronto entre IA e pessoas | `02-pessoas.md` |
-| 3 | `teu-saas-e-uma-merda` | Jobs, Wozniak, Huang e Bezos atacam e provam | `03-fundadores.md` |
-| 4 | `tu-e-doido-isso-que-e-marketing` | 10 mestres montam o plano estratégico | `04-plano-estrategico.md` |
-| 5 | `mega-plano` | Reclassifica tudo por prioridade e gera o plano de ação em PDF, o arquivo para IA e o checklist | `05-plano/` |
+| 1 | Leitura | `ultra-scan` | mapa do site e dos concorrentes, logos e folha de teste do logo |
+| 2 | Cinco pessoas | `ultra-joao-vendas`, `ultra-fernando-artista`, `ultra-ana-crescimento`, `ultra-robson-tecnico`, depois `ultra-andre-critico` | veredito de venda, cortes do André |
+| 3 | Fundadores | `ultra-jobs`, `ultra-wozniak`, `ultra-huang`, `ultra-bezos` | acusações com prova, 5 temas, debate das divergências |
+| 4 | Conselho de vendas | `ultra-brunson`, `ultra-hormozi`, `ultra-kennedy` | 3 ofertas, votação cruzada, duelo e oferta campeã |
+| 5 | Marketing | `ultra-ries-trout`, `ultra-schwartz`, `ultra-ogilvy`, `ultra-hopkins`, `ultra-ellis`, `ultra-ross`, `ultra-sharp`, `ultra-vaynerchuk`, `ultra-design` | entregas prontas por etapa (copy, paleta, Instagram, testes, conteúdo) |
+| 6 | Plano | `ultra-moderador`, `ultra-andre-critico`, `ultra-plano` | VEREDITO.md e plano de ação em PDF |
 
-Cada etapa usa as saídas das anteriores como prova. Não pule etapas. Se o usuário pedir só uma parte, rode até ela.
+Cada agente lê **parâmetros** (critérios com peso e régua de 0 a 10, testes, alertas, números com fonte) e devolve um **JSON padronizado**. O motor valida, consolida, acha as divergências, faz o duelo de ofertas e monta o plano. Os parâmetros ficam em `~/.ultra-skills/params/`. Para ver os de um agente: `ultra.py params ultra-jobs`.
 
-## Como rodar
+**Comando do motor:**
+- Linux e macOS: `python3 ~/.ultra-skills/ultra.py ...`
+- Windows: `py %USERPROFILE%\.ultra-skills\ultra.py ...` (no PowerShell: `py $env:USERPROFILE\.ultra-skills\ultra.py ...`)
 
-1. **Antes de tudo**, pergunte (ou tire da conversa):
-   - a URL do site;
-   - de 3 a 10 concorrentes (se ele não souber, busque e proponha);
-   - se tem Instagram e qual é o @;
-   - qual é o objetivo.
-2. **Inicie o pipeline.** O scan roda sozinho e já aponta a próxima etapa:
+## Passo a passo
+
+1. **Pergunte, ou tire da conversa:** a URL; de 3 a 10 concorrentes (se a pessoa não souber, busque e proponha); Instagram; o objetivo; se vende para o Brasil ou para fora.
+2. **Inicie:**
    ```bash
-   python3 <pasta-desta-skill>/scripts/pipeline.py iniciar https://site.com --concorrentes https://c1.com https://c2.com --print
+   python3 ~/.ultra-skills/ultra.py iniciar https://site.com --concorrentes https://c1.com https://c2.com --print
    ```
-   Use `--print` quando houver navegador (Playwright), para ter os prints que as etapas 2 a 4 usam no visual.
-3. **Para cada etapa:**
-   - carregue o `SKILL.md` da skill indicada;
-   - leia os arquivos que o pipeline listou;
-   - faça a etapa;
-   - grave a saída no arquivo indicado;
-   - rode `pipeline.py proximo` para ver a seguinte.
+   Isso roda o scan, baixa os logos e gera as folhas de teste. O motor imprime a primeira rodada.
+3. **Repita até o fim:**
+   ```bash
+   python3 ~/.ultra-skills/ultra.py proximo --json
+   ```
+   O resultado lista as `tarefas` da rodada. Cada tarefa traz o agente, o que fazer, o que ler e onde salvar.
+   - **Claude Code:** chame cada agente com a ferramenta de subagentes (Task/Agent), com `subagent_type` igual ao nome do agente (ex.: `ultra-jobs`), passando no prompt a tarefa, os arquivos para ler e o caminho para salvar. Quando a rodada diz `"paralelo": true`, chame **todos na mesma mensagem**.
+   - **Codex:** peça os agentes pelo nome, em paralelo ("spawn ultra-jobs, ultra-wozniak, ultra-huang e ultra-bezos com estas tarefas"). O Codex só chama agentes quando você pede.
+   - **Sem agentes instalados** (ou outra IA): faça o papel de cada agente, um por vez. Carregue os parâmetros com `ultra.py params AGENTE`, siga as regras e o formato de saída e salve o JSON no caminho da tarefa.
 
-   `pipeline.py status` mostra o que já foi feito.
-4. **No fim**, entregue ao usuário:
-   - o PDF do plano de ação (`05-plano/plano-de-acao.pdf`);
-   - o `plano-para-ia.md`;
-   - o `checklist.csv`;
-   - em 3 linhas: o veredito, a primeira ação e por quê.
+   Depois de cada rodada, rode `proximo` de novo. Ele **valida e consolida sozinho** e mostra a rodada seguinte. Se uma saída falhar na validação, devolva o erro ao mesmo agente para ele corrigir.
+4. **Rodadas especiais:**
+   - **Conselho de vendas, rodada 3:** o motor roda o duelo sozinho (ou `ultra.py duelo PASTA/04-vendas`). Com o ranking e o "melhor componente por critério", chame o autor da oferta vencedora para montar a **oferta campeã** e as 3 ofertas por público em `04-vendas/r3/oferta-campea.json`, no formato `{"ofertas": [...]}` do formato_oferta.
+   - **Plano, rodada 1 (moderador):** lê os `consolidado-r*.md` de todos os conselhos e escreve `06-plano/VEREDITO.md`: vende, vende pouco ou não vende; as 3 provas mais fortes; as discordâncias resolvidas e as que ficaram de pé; o placar de evidência.
+   - **Plano, rodada 3:** `ultra.py plano PASTA --pdf` gera o `plano.json` e o PDF. Complete os entregáveis vazios antes, se houver.
+5. **Entregue:** `06-plano/plano-de-acao.pdf`, `plano-para-ia.md` e `checklist.csv`. No texto, em 3 linhas: o veredito, a primeira ação e por quê, e o maior risco que ficou como hipótese.
 
-   Os arquivos ficam na pasta `ultra-run-<site>/`.
+## Regras do orquestrador
 
-**No Windows,** troque `python3` por `py` (ou `python`) em todos os comandos das skills.
+- Não pule rodadas. Se o usuário pedir só uma parte ("só os fundadores"), rode a leitura e aquela parte.
+- Não reescreva a saída de um agente. Se ela estiver fraca, devolva para ele com o motivo (por exemplo, "nota sem evidência").
+- Se o placar de evidência passar de 50% de hipótese, diga isso no topo da entrega.
+- Divergências não se resolvem por maioria: vence quem tem o degrau de evidência mais alto.
+- O scan é sempre o script. Não troque por extensão de navegador nem por leitura manual. Se o scan falhar por rede, siga a tabela de erros da skill `scan-ultra`.
 
-**Se houver terminal,** o scan é sempre o script. Não troque por extensão de navegador nem por leitura de página: o script já abre o Chrome/Edge do computador quando o site precisa, e lê as páginas de termos, preços e contato.
+## Uma parte só
 
-## Sem terminal
-
-Se não houver como rodar Python, siga a mesma ordem usando as ferramentas disponíveis (leitura de páginas, busca). Monte o mapa à mão na estrutura do `scan-ultra` e avise que não houve conferência automática.
-
-## Regras que valem em todas as etapas
-
-- Nada genérico: se a frase serviria para outro site do nicho, corte.
-- Marcação `[TESTADO]`, `[EVIDÊNCIA]` ou `[HIPÓTESE]` em toda afirmação.
-- Correção sempre pronta: texto, preço, cor em hex, botão.
-- Nenhuma citação inventada de pessoa real.
+| Pedido | Rode |
+|---|---|
+| "isso vende?" / "dá uma olhada" | leitura + pessoas |
+| "meu SaaS presta?" | leitura + pessoas + fundadores |
+| "monta uma oferta" / "que preço eu cobro?" | leitura + conselho de vendas (ou a skill `conselho-de-vendas`) |
+| "plano de marketing" | tudo |

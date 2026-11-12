@@ -1,0 +1,14 @@
+{
+ "id": "instagram",
+ "nome": "Perfil (Instagram e redes)",
+ "origem": "Gary Vaynerchuk, Byron Sharp, prática de mercado",
+ "como_avaliar": "Abra o perfil (print ou leitura). Sem acesso, avalie o que o dono mandar e marque o resto como não visto.",
+ "criterios": [
+  {"id": "bio", "dimensao": "promessa", "peso": 3, "pergunta": "A bio diz o que é, para quem, prova e próximo passo?", "como_medir": "4 linhas: o quê, para quem, prova, CTA com link.", "escala": {"0": "frase de efeito sem informação", "5": "2 das 4", "10": "as 4"}},
+  {"id": "foto", "dimensao": "marca", "peso": 1, "pergunta": "Foto de perfil reconhecível em tamanho pequeno?", "como_medir": "Logo legível no círculo ou rosto claro.", "escala": {"0": "ilegível", "5": "ok", "10": "inconfundível"}},
+  {"id": "destaques", "dimensao": "confianca", "peso": 2, "pergunta": "Destaques funcionam como vitrine na ordem do funil?", "como_medir": "Comece aqui → resultados → como funciona → preço → dúvidas.", "escala": {"0": "aleatórios ou vazios", "5": "existem sem ordem", "10": "vitrine em ordem"}},
+  {"id": "grade", "dimensao": "conteudo", "peso": 2, "pergunta": "Os 9 últimos posts mostram o que se vende e por quê?", "como_medir": "Quantos dos 9 têm a ver com a oferta?", "escala": {"0": "nada a ver", "5": "metade", "10": "todos levam à oferta"}},
+  {"id": "link", "dimensao": "acao", "peso": 2, "pergunta": "O link da bio leva ao lugar certo, rápido e medido?", "como_medir": "Destino, UTM, velocidade.", "escala": {"0": "quebrado ou árvore de 10 links", "5": "funciona sem foco", "10": "um destino, com UTM"}},
+  {"id": "vida", "dimensao": "confianca", "peso": 1, "pergunta": "Tem comentários de gente real e frequência?", "como_medir": "Comentários, respostas da marca, data do último post.", "escala": {"0": "parado ou comentários falsos", "5": "pouca vida", "10": "conversa real"}}
+ ]
+}

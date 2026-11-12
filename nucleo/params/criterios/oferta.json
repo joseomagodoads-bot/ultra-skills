@@ -1,0 +1,44 @@
+{
+ "id": "oferta",
+ "nome": "Oferta",
+ "origem": "Alex Hormozi ($100M Offers, $100M Money Models), Russell Brunson (DotCom Secrets, Expert Secrets), Dan Kennedy (Magnetic Marketing)",
+ "como_avaliar": "Use a seção 'Oferta e números' e o Raio-X do scan, as páginas-chave (termos/reembolso) e a tabela de 3 a 5 concorrentes. Toda nota cita o trecho da página.",
+ "criterios": [
+  {"id": "resultado_sonho", "dimensao": "oferta", "peso": 3, "pergunta": "O resultado está dito nas palavras do cliente, com número e prazo?", "como_medir": "H1, subtítulo e oferta: tem resultado concreto ou só recurso?", "escala": {"0": "só lista recursos", "5": "resultado vago", "10": "resultado com número e prazo, na língua do cliente"}},
+  {"id": "probabilidade", "dimensao": "prova", "peso": 3, "pergunta": "Por que o cliente acreditaria que vai dar certo para ele?", "como_medir": "Demonstração, números, depoimentos verificáveis, quem está por trás, garantia.", "escala": {"0": "nenhuma prova", "5": "prova genérica ou anônima", "10": "prova específica e verificável"}},
+  {"id": "tempo", "dimensao": "oferta", "peso": 2, "pergunta": "Em quanto tempo ele sente a primeira melhora?", "como_medir": "Está dito? É curto? Existe 'primeiro resultado' antes do resultado final?", "escala": {"0": "não diz ou é longo", "5": "diz, mas é longo", "10": "primeira vitória rápida e dita"}},
+  {"id": "esforco", "dimensao": "atrito", "peso": 2, "pergunta": "O que ele precisa fazer, aprender ou abrir mão?", "como_medir": "Setup, cadastro, curva de aprendizado, 'feito por você' vs 'faça você mesmo'.", "escala": {"0": "esforço alto e escondido", "5": "esforço médio", "10": "quase nada; ou feito por eles"}},
+  {"id": "stack", "dimensao": "oferta", "peso": 2, "pergunta": "Os componentes estão listados um a um, com o valor de cada?", "como_medir": "Existe a 'pilha' (o que entra) antes do preço?", "escala": {"0": "só o nome do produto", "5": "lista sem valor", "10": "pilha clara, cada peça resolvendo um problema"}},
+  {"id": "bonus", "dimensao": "oferta", "peso": 1, "pergunta": "Os bônus resolvem o próximo problema do cliente?", "como_medir": "Liste os bônus. Cada um responde a uma objeção ou ao passo seguinte?", "escala": {"0": "sem bônus ou bônus aleatório", "5": "bônus genérico", "10": "bônus que mata objeção específica"}},
+  {"id": "garantia", "dimensao": "confianca", "peso": 3, "pergunta": "A garantia tira o risco do cliente e diz como pedir o dinheiro?", "como_medir": "Prazo, condição, como pedir. No Brasil, 7 dias é lei (CDC art. 49), não conta.", "escala": {"0": "sem garantia ou só a da lei", "5": "garantia vaga", "10": "garantia específica, longa e fácil de usar"}},
+  {"id": "escassez_real", "dimensao": "oferta", "peso": 1, "pergunta": "Existe limite real (vagas, estoque, capacidade)?", "como_medir": "O limite tem motivo verificável? Contador que reinicia = 0.", "escala": {"0": "falsa ou nenhuma quando caberia", "5": "existe sem motivo", "10": "real e com motivo"}},
+  {"id": "urgencia_real", "dimensao": "oferta", "peso": 1, "pergunta": "Existe motivo real para agir agora?", "como_medir": "Prazo, preço de lançamento, bônus com data, sazonalidade. Motivo explicado?", "escala": {"0": "falsa ou nenhuma", "5": "prazo sem motivo", "10": "prazo real com motivo"}},
+  {"id": "nome", "dimensao": "promessa", "peso": 1, "pergunta": "A oferta tem nome que diz o resultado, para quem e em quanto tempo?", "como_medir": "Fórmula MAGIC (Hormozi): motivo, avatar, objetivo, intervalo, contêiner.", "escala": {"0": "nome genérico ('Plano Pro')", "5": "nome com 1 ou 2 elementos", "10": "nome que vende sozinho"}},
+  {"id": "mecanismo", "dimensao": "diferencial", "peso": 2, "pergunta": "Existe um 'como funciona' que os concorrentes não têm?", "como_medir": "Compare com os concorrentes do scan. É uma nova oportunidade ou só uma melhoria?", "escala": {"0": "igual aos outros", "5": "diferença pequena", "10": "mecanismo próprio e explicado"}},
+  {"id": "reversao_risco", "dimensao": "atrito", "peso": 2, "pergunta": "Dá para começar sem medo (teste, entrada barata, pagar depois)?", "como_medir": "Teste grátis, R$ 1, plano grátis, demo, primeiro mês pela metade.", "escala": {"0": "cartão na frente e sem saída", "5": "existe, mas escondido", "10": "entrada sem risco em destaque"}}
+ ],
+ "formato_oferta": {
+  "id": "texto curto único, ex.: of-brunson-1",
+  "nome": "nome da oferta",
+  "publico": "quem compra",
+  "nivel_consciencia": "inconsciente | problema | solucao | produto | pronto",
+  "promessa": "resultado + prazo",
+  "mecanismo": "o como único",
+  "componentes": [{"item": "o que entra", "resolve": "qual problema", "valor_declarado": 0}],
+  "bonus": [{"item": "", "mata_objecao": ""}],
+  "preco": {"principal": 0, "moeda": "BRL", "ancora": "comparado a quê", "parcelas": "ex.: 12x de 9,90", "por_dia": 0},
+  "niveis": [{"nome": "entrada | principal | premium", "preco": 0, "o_que_muda": ""}],
+  "garantia": {"tipo": "incondicional | condicional | de resultado | anti-garantia", "prazo_dias": 0, "como_pedir": ""},
+  "urgencia": {"tipo": "prazo | vagas | bonus com data | nenhuma", "motivo_real": ""},
+  "escada": {"bump": "", "upsell": "", "downsell": "", "recorrencia": ""},
+  "headline": "como a oferta aparece no topo da página",
+  "por_que_vence": "em 2 linhas"
+ },
+ "referencias": [
+  {"fonte": "Alex Hormozi, $100M Offers", "ano": 2021, "ideia": "equação de valor; oferta irresistível montada peça por peça; MAGIC"},
+  {"fonte": "Alex Hormozi, $100M Money Models", "ano": 2025, "ideia": "ofertas de atração, aumento, redução e continuidade"},
+  {"fonte": "Russell Brunson, DotCom Secrets", "ano": 2015, "ideia": "escada de valor e funis"},
+  {"fonte": "Russell Brunson, Expert Secrets", "ano": 2017, "ideia": "nova oportunidade vence melhoria; a pilha da oferta"},
+  {"fonte": "CDC, art. 49", "ideia": "arrependimento de 7 dias em compra fora da loja"}
+ ]
+}

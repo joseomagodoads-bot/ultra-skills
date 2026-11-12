@@ -154,3 +154,22 @@ Um documento `plano-estrategico.md` (ou o formato de documento disponível) com:
 - **Vaynerchuk:** *Jab, Jab, Jab, Right Hook* (2013).
 - **Ross:** *Predictable Revenue*, com Marylou Tyler (2011).
 - **Design:** Paul Rand, *Design, Form, and Chaos* (1993); Massimo Vignelli, *The Vignelli Canon* (2010).
+
+## Modo agentes
+
+Os mestres são agentes, e cada um é dono de uma etapa do plano:
+
+| Etapa | Dono |
+|---|---|
+| posicionamento | `ultra-ries-trout` |
+| nível de consciência e mensagem | `ultra-schwartz` |
+| copy do site | `ultra-ogilvy` |
+| testes e números | `ultra-hopkins` |
+| aquisição e funil | `ultra-ellis`, `ultra-ross` |
+| marca e disponibilidade | `ultra-sharp` |
+| conteúdo e Instagram | `ultra-vaynerchuk` |
+| cores, logo, perfil e destaques | `ultra-design` |
+
+**A oferta vem do conselho de vendas.** Brunson, Hormozi e Kennedy propõem, votam uns nas dos outros e o motor elege a campeã em `04-vendas/r3/oferta-campea.json`. A etapa de oferta deste plano usa essa campeã e não inventa outra.
+
+Cada dono entrega o material pronto no campo `entregas` (textos, paleta com hex, itens dos destaques, roteiros). O `ultra.py plano` junta tudo no PDF.

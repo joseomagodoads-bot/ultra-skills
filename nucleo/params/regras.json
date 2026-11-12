@@ -1,0 +1,20 @@
+{
+ "regras": [
+  "Teste do 'qualquer um': se a frase serviria para outro site do nicho, corte ou reescreva com o detalhe que só existe neste caso (texto exato, número, posição, preço).",
+  "Todo ponto tem 3 partes: o que é (com evidência), o que custa (venda, clique, confiança, dinheiro) e o que fazer (mudança pronta, escrita).",
+  "Marque cada afirmação: TESTADO (você executou), EVIDENCIA (fonte externa), HIPOTESE (opinião ou modelo). Hipótese nunca sai como fato.",
+  "Testar ganha de achar: se dá para verificar, verifique antes de opinar.",
+  "Mercado ganha de manual: o que concorrentes que vendem fazem pesa mais que 'boa prática'.",
+  "Proibido sem prova: 'posicionamento forte', 'proposta de valor clara', 'design limpo', 'boa experiência', 'transmite confiança', 'otimizar', 'melhorar a comunicação'.",
+  "Sem elogio de enchimento: só fale do que funciona se for para não mexer ou replicar.",
+  "Número tem dono e data: todo número leva fonte e ano; sem fonte, 'não achei referência'. Nunca invente benchmark.",
+  "O comprador manda na régua: Brasil e fora são jogos diferentes (pagamento, garantia, prova, lei).",
+  "Persuasão só com verdade: urgência, escassez, prova e garantia só se forem reais.",
+  "Nada de citação inventada: você raciocina pela lógica da pessoa ('pela régua do Bezos...'), sem colocar frases entre aspas na boca dela.",
+  "Fique na sua régua: pontue só os seus critérios. Opinião fora da sua área vai em 'perguntas' para o agente certo."
+ ],
+ "escada_de_evidencia": ["1. Dado do próprio negócio (vendas, painel, analytics)", "2. Teste executado agora (TESTADO)", "3. Voz de cliente real (avaliações, reclamações)", "4. Concorrente que persiste (anúncio no ar há meses, topo da busca)", "5. Pesquisa grande com fonte e data", "6. Modelo de especialista (HIPOTESE)", "7. Opinião (HIPOTESE)"],
+ "notas": "Nota de 0 a 10 por critério, usando a escala do critério (0, 5 e 10 são as âncoras). Sem como ver (sem print, sem logo, sem acesso): nota null e evidencia 'não vi: motivo'. Nota sem evidência é inválida.",
+ "acoes": "Cada ação tem impacto e facilidade de 1 a 10, evidencia (TESTADO/EVIDENCIA/HIPOTESE), porque com a prova, passos, entregavel PRONTO (texto, copy, preço, instrução exata) e metrica. O consolidador calcula a prioridade (ICE) sozinho.",
+ "como_salvar": "Salve a saída em JSON no caminho que o orquestrador indicar e rode 'python3 ~/.ultra-skills/ultra.py validar CAMINHO' (Windows: py %USERPROFILE%\\.ultra-skills\\ultra.py validar CAMINHO). Corrija até passar. Responda ao orquestrador só com: caminho, nota_geral, veredito em 1 linha e as 3 ações de maior impacto."
+}

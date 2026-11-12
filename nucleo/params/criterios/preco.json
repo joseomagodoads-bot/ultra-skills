@@ -1,0 +1,31 @@
+{
+ "id": "preco",
+ "nome": "Preço",
+ "origem": "Dan Kennedy (No B.S. Price Strategy), Alex Hormozi, Russell Brunson, Madhavan Ramanujam (Monetizing Innovation), pesquisa de preço",
+ "como_avaliar": "Preços do scan (inclusive de outras páginas), tabela de preços de 3 a 5 concorrentes, forma de pagamento do mercado (Brasil ou fora). Faça a conta: preço por dia, por uso e contra a alternativa.",
+ "criterios": [
+  {"id": "ancora", "dimensao": "preco", "peso": 3, "pergunta": "O preço aparece comparado a alguma coisa?", "como_medir": "Custo do problema, alternativa (concorrente, fazer na mão, contratar), versão premium, valor da pilha.", "escala": {"0": "preço solto", "5": "comparação fraca ou riscado sem motivo", "10": "âncora forte e verdadeira"}},
+  {"id": "valor_vs_preco", "dimensao": "preco", "peso": 3, "pergunta": "O valor percebido é muitas vezes maior que o preço?", "como_medir": "Some o valor do resultado e da pilha. Heurística de mercado: valor ≥ 10× o preço.", "escala": {"0": "parece caro pelo que entrega", "5": "parece justo", "10": "parece barato demais pelo que entrega"}},
+  {"id": "posicionamento", "dimensao": "preco", "peso": 2, "pergunta": "O preço combina com o posicionamento?", "como_medir": "Mais barato do mercado sem ser a estratégia? Premium sem sinais de premium?", "escala": {"0": "briga por preço sem vantagem de custo", "5": "no meio sem motivo", "10": "preço coerente com a promessa e a prova"}},
+  {"id": "niveis", "dimensao": "preco", "peso": 2, "pergunta": "Existe arquitetura de níveis (entrada, principal, premium)?", "como_medir": "Quantos planos, qual é o alvo, existe isca (nível que faz o alvo parecer melhor)?", "escala": {"0": "um preço só ou 5 planos confusos", "5": "níveis sem alvo claro", "10": "3 níveis, alvo óbvio, premium para quem quer mais"}},
+  {"id": "premium", "dimensao": "preco", "peso": 1, "pergunta": "Existe opção cara para quem quer mais (feito por você, acesso, velocidade)?", "como_medir": "Há um nível 3× a 10× acima do principal?", "escala": {"0": "não existe", "5": "existe sem valor claro", "10": "existe e tem motivo forte"}},
+  {"id": "total_claro", "dimensao": "confianca", "peso": 3, "pergunta": "O total (frete, juros, taxas, renovação) está claro antes do fim?", "como_medir": "Quantas telas até saber o total? Renovação automática dita?", "escala": {"0": "surpresa no fim", "5": "dá para achar", "10": "total claro na oferta"}},
+  {"id": "pagamento_mercado", "dimensao": "atrito", "peso": 2, "pergunta": "A forma de pagar é a do mercado do comprador?", "como_medir": "Brasil: Pix e cartão em 12x. Fora: cartão, carteiras (Apple Pay, Google Pay, PayPal), moeda local.", "escala": {"0": "forma errada para o mercado", "5": "falta uma forma importante", "10": "formas certas em destaque"}},
+  {"id": "unidade", "dimensao": "preco", "peso": 1, "pergunta": "O preço é traduzido em unidade fácil (por dia, por uso, por resultado)?", "como_medir": "Existe 'menos que um café por dia' ou 'R$ X por pedido'?", "escala": {"0": "não", "5": "tradução fraca", "10": "tradução que faz o preço sumir"}},
+  {"id": "motivo", "dimensao": "preco", "peso": 1, "pergunta": "Preço e desconto têm motivo?", "como_medir": "Por que custa isso? Por que está com desconto? Desconto eterno = 0.", "escala": {"0": "desconto sem motivo ou eterno", "5": "motivo fraco", "10": "motivo real e dito"}},
+  {"id": "escada", "dimensao": "crescimento", "peso": 2, "pergunta": "Existe segunda venda (complemento, upsell, recorrência)?", "como_medir": "Bump no checkout, oferta na página de obrigado, assinatura, recompra.", "escala": {"0": "venda única", "5": "existe uma", "10": "escada completa"}},
+  {"id": "teste_de_preco", "dimensao": "preco", "peso": 1, "pergunta": "Há como saber se o preço está certo?", "como_medir": "Teste A/B de preço, conversa de disposição a pagar, histórico de aumento.", "escala": {"0": "preço chutado", "5": "comparado com concorrente", "10": "testado ou validado com cliente"}}
+ ],
+ "regras_de_bolso": [
+  {"regra": "Preço terminado em 9 tende a vender mais em produto de impulso; preço redondo combina com premium", "fonte": "Anderson e Simester, Mind Your Pricing Cues, HBR", "ano": 2003},
+  {"regra": "Âncora alta mostrada antes muda a percepção do preço seguinte", "fonte": "William Poundstone, Priceless", "ano": 2010},
+  {"regra": "Pergunte a disposição a pagar antes de construir; arquitetura bom-melhor-ótimo", "fonte": "Madhavan Ramanujam e Georg Tacke, Monetizing Innovation", "ano": 2016},
+  {"regra": "Preço é consequência do posicionamento, não do custo; nunca ser o mais barato sem vantagem de custo", "fonte": "Dan Kennedy e Jason Marrs, No B.S. Price Strategy", "ano": 2011},
+  {"regra": "No Brasil, cartão parcelado sustenta ticket alto; Pix domina à vista", "fonte": "PCMI/Ebanx", "ano": 2026}
+ ],
+ "referencias": [
+  {"fonte": "Dan Kennedy e Jason Marrs, No B.S. Price Strategy", "ano": 2011},
+  {"fonte": "Alex Hormozi, $100M Offers", "ano": 2021},
+  {"fonte": "Madhavan Ramanujam e Georg Tacke, Monetizing Innovation", "ano": 2016}
+ ]
+}

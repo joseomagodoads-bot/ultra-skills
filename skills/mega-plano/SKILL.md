@@ -93,3 +93,13 @@ Se a validação apontar erro, corrija o JSON e rode de novo. A mensagem diz o c
 ## Entrega
 
 Entregue o PDF, o `plano-para-ia.md` e o `checklist.csv`. Diga numa linha qual é a primeira ação e por quê.
+
+## Modo agentes
+
+Depois de uma análise com agentes, o `plano.json` sai pronto do motor. Ele junta as ações de todos os conselhos, ordenadas por ICE e sem repetidas, a oferta campeã e as entregas de cada etapa:
+
+```bash
+python3 ~/.ultra-skills/ultra.py plano PASTA-DA-ANALISE --pdf
+```
+
+Confira o `06-plano/plano.json` antes de entregar: entregáveis vazios, ação sem métrica, hipótese no topo da ordem. Se mexer no arquivo, rode o `gerar.py` de novo.

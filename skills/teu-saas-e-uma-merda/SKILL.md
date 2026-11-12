@@ -136,3 +136,18 @@ Em cada rodada, os quatro falam de forma curta, discordam quando discordam e fec
 - **Bezos:** cartas aos acionistas da Amazon (1997–2020), reunidas em *Invent and Wander* (2020); Brad Stone, *The Everything Store* (2013); Colin Bryar e Bill Carr, *Working Backwards* (2021).
 
 Se houver busca disponível e a análise depender de um detalhe específico de um fundador, confirme numa fonte antes de usar.
+
+## Modo agentes
+
+Os quatro fundadores são agentes separados: `ultra-jobs`, `ultra-wozniak`, `ultra-huang` e `ultra-bezos`. Cada um tem critérios próprios com peso e régua de 0 a 10, e também puxa critérios das bibliotecas `crescimento`, `tecnico`, `landing` e `logo`.
+
+- **Rodada 1, em paralelo:** cada fundador acusa, dá as notas com evidência e propõe ações com ICE.
+- **Rodada 2, só se houver divergência de 4 pontos ou mais no mesmo critério:** os que discordam leem o consolidado e respondem um ao outro no campo `discorda_de`.
+- O motor devolve a matriz por dimensão, os consensos e as ações juntas.
+
+```bash
+python3 ~/.ultra-skills/ultra.py iniciar URL --concorrentes A B
+python3 ~/.ultra-skills/ultra.py proximo --json
+```
+
+Pule as rodadas das pessoas com a skill `analise-ultra` e o pedido "só os fundadores".

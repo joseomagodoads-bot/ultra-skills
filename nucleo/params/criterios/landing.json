@@ -1,0 +1,21 @@
+{
+ "id": "landing",
+ "nome": "Página de venda e caminho até o pagamento",
+ "origem": "Baymard Institute, Nielsen Norman Group, Steve Krug, Unbounce",
+ "como_avaliar": "Acima da dobra e CTAs do scan, prints de celular (--print), páginas-chave, caminho clicado até a última tela antes de pagar.",
+ "criterios": [
+  {"id": "cinco_segundos", "dimensao": "promessa", "peso": 3, "pergunta": "Em 5 segundos, sem rolar, dá para dizer o que é, para quem e o próximo passo?", "como_medir": "Seção 'Acima da dobra' do scan + print mobile.", "escala": {"0": "não dá", "5": "dá uma das três", "10": "as três"}},
+  {"id": "continuidade", "dimensao": "promessa", "peso": 2, "pergunta": "A primeira tela repete a promessa do anúncio ou da busca?", "como_medir": "Compare o anúncio (Biblioteca da Meta) e o H1.", "escala": {"0": "outra promessa", "5": "parecida", "10": "mesmas palavras, imagem e preço"}},
+  {"id": "um_objetivo", "dimensao": "acao", "peso": 2, "pergunta": "A página tem um único pedido principal?", "como_medir": "Quantos destinos diferentes os CTAs têm (scan)?", "escala": {"0": "3+ pedidos brigando", "5": "2 pedidos", "10": "1 pedido repetido"}},
+  {"id": "cta_topo", "dimensao": "acao", "peso": 2, "pergunta": "Existe CTA com destino real logo abaixo do H1?", "como_medir": "Raio-X: primeiro CTA.", "escala": {"0": "não", "5": "existe sem destino ou vago", "10": "existe, claro e funcionando"}},
+  {"id": "prova_perto", "dimensao": "prova", "peso": 2, "pergunta": "A prova está perto do botão e do preço?", "como_medir": "Ordem das seções do scan.", "escala": {"0": "sem prova", "5": "prova no fim", "10": "prova ao lado da decisão"}},
+  {"id": "mobile", "dimensao": "atrito", "peso": 2, "pergunta": "No celular dá para comprar com o dedão?", "como_medir": "Print mobile, viewport, botões ≥ 44 px, teclado certo.", "escala": {"0": "quebra no celular", "5": "funciona com esforço", "10": "fácil com o dedão"}},
+  {"id": "campos", "dimensao": "atrito", "peso": 2, "pergunta": "O formulário pede só o necessário?", "como_medir": "Campos obrigatórios (scan). Checkout ideal: 12 a 14 elementos (Baymard).", "escala": {"0": "pede o que não precisa", "5": "um pouco a mais", "10": "mínimo"}},
+  {"id": "recuperacao", "dimensao": "crescimento", "peso": 1, "pergunta": "Quem não compra deixa contato e é recuperado?", "como_medir": "Captura de e-mail/WhatsApp, isca, sequência.", "escala": {"0": "quem sai some", "5": "captura sem sequência", "10": "captura e sequência"}}
+ ],
+ "numeros_de_bolso": [
+  {"dado": "Cerca de 70% dos carrinhos são abandonados", "fonte": "Baymard, média de 50 estudos", "ano": 2025},
+  {"dado": "Mediana de 6,6% de conversão em landing pages", "fonte": "Unbounce, 41 mil páginas", "ano": 2024},
+  {"dado": "Checkout ideal entre 12 e 14 elementos de formulário", "fonte": "Baymard"}
+ ]
+}

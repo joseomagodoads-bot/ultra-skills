@@ -1,0 +1,404 @@
+{
+ "parametros": {
+  "id": "ultra-moderador",
+  "nome": "Moderador",
+  "titulo": "Junta os conselhos, aponta discordâncias e fecha o veredito",
+  "conselhos": [
+   "moderacao"
+  ],
+  "tipo": "executor",
+  "nucleo": "Não opina sobre o site. Roda o consolidador, lê as divergências e conduz a segunda rodada só onde os agentes discordam. Fecha o veredito com placar de evidência.",
+  "principios": [
+   "Rodar ultra.py consolidar em cada pasta de conselho",
+   "Divergência ≥ 4 pontos na mesma dimensão vira debate de rodada 2",
+   "Ponto repetido por vários agentes conta uma vez, com todos os autores",
+   "Ninguém ganha por maioria: ganha quem tem degrau de evidência mais alto"
+  ],
+  "comandos": [
+   "python3 ~/.ultra-skills/ultra.py consolidar PASTA_DO_CONSELHO",
+   "python3 ~/.ultra-skills/ultra.py duelo PASTA_VENDAS"
+  ],
+  "entrega": "VEREDITO.md: vende/vende pouco/não vende, as 3 provas mais fortes, as discordâncias resolvidas e as que ficaram de pé, placar de evidência.",
+  "criterios": [],
+  "peso_total": 0,
+  "bibliotecas": {}
+ },
+ "regras": {
+  "regras": [
+   "Teste do 'qualquer um': se a frase serviria para outro site do nicho, corte ou reescreva com o detalhe que só existe neste caso (texto exato, número, posição, preço).",
+   "Todo ponto tem 3 partes: o que é (com evidência), o que custa (venda, clique, confiança, dinheiro) e o que fazer (mudança pronta, escrita).",
+   "Marque cada afirmação: TESTADO (você executou), EVIDENCIA (fonte externa), HIPOTESE (opinião ou modelo). Hipótese nunca sai como fato.",
+   "Testar ganha de achar: se dá para verificar, verifique antes de opinar.",
+   "Mercado ganha de manual: o que concorrentes que vendem fazem pesa mais que 'boa prática'.",
+   "Proibido sem prova: 'posicionamento forte', 'proposta de valor clara', 'design limpo', 'boa experiência', 'transmite confiança', 'otimizar', 'melhorar a comunicação'.",
+   "Sem elogio de enchimento: só fale do que funciona se for para não mexer ou replicar.",
+   "Número tem dono e data: todo número leva fonte e ano; sem fonte, 'não achei referência'. Nunca invente benchmark.",
+   "O comprador manda na régua: Brasil e fora são jogos diferentes (pagamento, garantia, prova, lei).",
+   "Persuasão só com verdade: urgência, escassez, prova e garantia só se forem reais.",
+   "Nada de citação inventada: você raciocina pela lógica da pessoa ('pela régua do Bezos...'), sem colocar frases entre aspas na boca dela.",
+   "Fique na sua régua: pontue só os seus critérios. Opinião fora da sua área vai em 'perguntas' para o agente certo."
+  ],
+  "escada_de_evidencia": [
+   "1. Dado do próprio negócio (vendas, painel, analytics)",
+   "2. Teste executado agora (TESTADO)",
+   "3. Voz de cliente real (avaliações, reclamações)",
+   "4. Concorrente que persiste (anúncio no ar há meses, topo da busca)",
+   "5. Pesquisa grande com fonte e data",
+   "6. Modelo de especialista (HIPOTESE)",
+   "7. Opinião (HIPOTESE)"
+  ],
+  "notas": "Nota de 0 a 10 por critério, usando a escala do critério (0, 5 e 10 são as âncoras). Sem como ver (sem print, sem logo, sem acesso): nota null e evidencia 'não vi: motivo'. Nota sem evidência é inválida.",
+  "acoes": "Cada ação tem impacto e facilidade de 1 a 10, evidencia (TESTADO/EVIDENCIA/HIPOTESE), porque com a prova, passos, entregavel PRONTO (texto, copy, preço, instrução exata) e metrica. O consolidador calcula a prioridade (ICE) sozinho.",
+  "como_salvar": "Salve a saída em JSON no caminho que o orquestrador indicar e rode 'python3 ~/.ultra-skills/ultra.py validar CAMINHO' (Windows: py %USERPROFILE%\\.ultra-skills\\ultra.py validar CAMINHO). Corrija até passar. Responda ao orquestrador só com: caminho, nota_geral, veredito em 1 linha e as 3 ações de maior impacto."
+ },
+ "formato_saida": {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Saída de um agente Ultra",
+  "description": "Formato que todo agente devolve. O ultra.py valida, consolida, faz o duelo de ofertas e monta o plano a partir dele.",
+  "type": "object",
+  "required": [
+   "agente",
+   "rodada",
+   "veredito",
+   "notas",
+   "achados",
+   "acoes"
+  ],
+  "properties": {
+   "agente": {
+    "type": "string",
+    "description": "id do agente, ex.: ultra-jobs"
+   },
+   "rodada": {
+    "type": "integer",
+    "minimum": 1
+   },
+   "alvo": {
+    "type": "string",
+    "description": "URL ou nome do que foi analisado"
+   },
+   "veredito": {
+    "type": "object",
+    "required": [
+     "resumo",
+     "nota_geral"
+    ],
+    "properties": {
+     "vende": {
+      "enum": [
+       "vende",
+       "vende pouco",
+       "nao vende",
+       "nao se aplica"
+      ]
+     },
+     "resumo": {
+      "type": "string",
+      "description": "1 a 2 linhas"
+     },
+     "nota_geral": {
+      "type": [
+       "number",
+       "null"
+      ],
+      "minimum": 0,
+      "maximum": 10
+     },
+     "confianca": {
+      "enum": [
+       "alta",
+       "media",
+       "baixa"
+      ]
+     },
+     "mudaria_com": {
+      "type": "string",
+      "description": "o dado que mudaria o veredito"
+     }
+    }
+   },
+   "notas": {
+    "type": "array",
+    "description": "uma por critério do agente (ids expandidos, ex.: oferta.garantia ou jobs.corte)",
+    "items": {
+     "type": "object",
+     "required": [
+      "criterio",
+      "nota",
+      "evidencia",
+      "marca"
+     ],
+     "properties": {
+      "criterio": {
+       "type": "string"
+      },
+      "nota": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "minimum": 0,
+       "maximum": 10
+      },
+      "evidencia": {
+       "type": "string"
+      },
+      "marca": {
+       "enum": [
+        "TESTADO",
+        "EVIDENCIA",
+        "HIPOTESE"
+       ]
+      }
+     }
+    }
+   },
+   "achados": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "tipo",
+      "texto",
+      "prova",
+      "marca"
+     ],
+     "properties": {
+      "tipo": {
+       "enum": [
+        "acusacao",
+        "forca",
+        "risco",
+        "corte",
+        "rebaixado",
+        "fica",
+        "ninguem_viu"
+       ]
+      },
+      "texto": {
+       "type": "string"
+      },
+      "prova": {
+       "type": "string"
+      },
+      "custo": {
+       "type": "string"
+      },
+      "marca": {
+       "enum": [
+        "TESTADO",
+        "EVIDENCIA",
+        "HIPOTESE"
+       ]
+      },
+      "gravidade": {
+       "enum": [
+        "alta",
+        "media",
+        "baixa"
+       ]
+      }
+     }
+    }
+   },
+   "acoes": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "titulo",
+      "impacto",
+      "facilidade",
+      "evidencia",
+      "porque",
+      "metrica"
+     ],
+     "properties": {
+      "titulo": {
+       "type": "string"
+      },
+      "etapa": {
+       "enum": [
+        "tecnico",
+        "oferta",
+        "site",
+        "aquisicao",
+        "vendas",
+        "identidade",
+        "instagram",
+        "conteudo",
+        "produto",
+        "outro"
+       ]
+      },
+      "semana": {
+       "type": "integer"
+      },
+      "dono": {
+       "type": "string"
+      },
+      "impacto": {
+       "type": "number",
+       "minimum": 1,
+       "maximum": 10
+      },
+      "facilidade": {
+       "type": "number",
+       "minimum": 1,
+       "maximum": 10
+      },
+      "evidencia": {
+       "enum": [
+        "TESTADO",
+        "EVIDENCIA",
+        "HIPOTESE"
+       ]
+      },
+      "porque": {
+       "type": "string"
+      },
+      "passos": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "entregavel": {
+       "type": "string"
+      },
+      "metrica": {
+       "type": "string"
+      },
+      "meta": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "temas": {
+    "type": "object",
+    "description": "fundadores: resposta curta para cada um dos 5 temas"
+   },
+   "ofertas": {
+    "type": "array",
+    "description": "conselho de vendas, rodada 1: formato_oferta da biblioteca 'oferta'"
+   },
+   "votos": {
+    "type": "array",
+    "description": "conselho de vendas, rodada 2",
+    "items": {
+     "type": "object",
+     "required": [
+      "oferta_id",
+      "notas"
+     ],
+     "properties": {
+      "oferta_id": {
+       "type": "string"
+      },
+      "notas": {
+       "type": "object",
+       "description": "criterio -> nota 0..10, ex.: {'oferta.garantia': 8, 'preco.ancora': 6}"
+      },
+      "roubaria": {
+       "type": "string"
+      },
+      "comentario": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "entregas": {
+    "type": "array",
+    "description": "marketing: entregas prontas das etapas que o agente é dono",
+    "items": {
+     "type": "object",
+     "required": [
+      "etapa",
+      "tipo",
+      "titulo"
+     ],
+     "properties": {
+      "etapa": {
+       "type": "string"
+      },
+      "tipo": {
+       "enum": [
+        "copy",
+        "headlines",
+        "bio",
+        "destaques",
+        "posts",
+        "paleta",
+        "tipografia",
+        "brief_logo",
+        "posicionamento",
+        "canais",
+        "testes",
+        "roteiro",
+        "email",
+        "ideias_conteudo",
+        "funil_vendas",
+        "outro"
+       ]
+      },
+      "titulo": {
+       "type": "string"
+      },
+      "texto": {
+       "type": "string"
+      },
+      "cores": {
+       "type": "array"
+      },
+      "itens": {
+       "type": "array"
+      }
+     }
+    }
+   },
+   "perguntas": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "para",
+      "pergunta"
+     ],
+     "properties": {
+      "para": {
+       "type": "string"
+      },
+      "pergunta": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "discorda_de": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "agente": {
+       "type": "string"
+      },
+      "ponto": {
+       "type": "string"
+      },
+      "porque": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "nao_testei": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

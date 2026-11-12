@@ -141,6 +141,64 @@ def baixar(url: str, timeout: float = 20.0, metodo: str = "GET", max_bytes: int 
     return out
 
 
+def baixar_binario(url: str, timeout: float = 20.0, max_bytes: int = 3_000_000) -> tuple[bytes, str]:
+    req = Request(url, headers={"User-Agent": UA, "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*,*/*;q=0.8"})
+    try:
+        try:
+            resp = urlopen(req, timeout=timeout)
+        except URLError as e:
+            ctx = _contexto_ssl_certifi()
+            if ctx is None or not isinstance(getattr(e, "reason", None), ssl.SSLError):
+                raise
+            resp = urlopen(req, timeout=timeout, context=ctx)
+        if resp.getcode() != 200:
+            return b"", ""
+        return resp.read(max_bytes), resp.headers.get("content-type", "")
+    except (URLError, OSError, ValueError):
+        return b"", ""
+
+
+EXT_IMG = {"image/png": ".png", "image/x-icon": ".ico", "image/vnd.microsoft.icon": ".ico", "image/svg+xml": ".svg",
+           "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif", "image/avif": ".avif"}
+
+
+def candidatos_logo(mapa: dict, links_head: list[dict]) -> list[tuple[str, str]]:
+    """(origem, url) em ordem de qualidade: logo no cabeçalho, apple-touch-icon, ícone, /favicon.ico."""
+    out = []
+    for i in mapa.get("_imagens_todas", []):
+        alvo = f"{i.get('src', '')} {i.get('alt') or ''} {i.get('classe', '')}".lower()
+        if i.get("src") and ("logo" in alvo or i.get("em_link_raiz")):
+            out.append(("logo da página", i["src"]))
+    for rel_alvo, nome in (("apple-touch-icon", "apple-touch-icon"), ("icon", "ícone da aba"), ("mask-icon", "mask-icon")):
+        for l in links_head:
+            if rel_alvo in l["rel"].split() or l["rel"] == rel_alvo:
+                out.append((nome, l["href"]))
+    raiz = f"{urlparse(mapa['url_final']).scheme}://{urlparse(mapa['url_final']).netloc}"
+    out.append(("favicon.ico", raiz + "/favicon.ico"))
+    vistos, unicos = set(), []
+    for o, u in out:
+        if u and u not in vistos and not u.startswith("data:"):
+            vistos.add(u)
+            unicos.append((o, u))
+    return unicos
+
+
+def baixar_logos(mapa: dict, links_head: list[dict], pasta: Path, slug: str, pool, timeout: float, limite: int = 3) -> list[dict]:
+    cands = candidatos_logo(mapa, links_head)[:6]
+    res = list(pool.map(lambda c: (c, baixar_binario(c[1], timeout)), cands))
+    out = []
+    for (origem, url), (dado, ctype) in res:
+        if not dado or len(dado) < 100 or len(out) >= limite:
+            continue
+        ext = EXT_IMG.get(ctype.split(";")[0].strip().lower()) or (Path(urlparse(url).path).suffix.lower() or ".img")
+        if ext not in (".png", ".ico", ".svg", ".jpg", ".jpeg", ".webp", ".gif", ".avif"):
+            continue
+        arq = pasta / f"{slug}-logo-{len(out) + 1}{ext}"
+        arq.write_bytes(dado)
+        out.append({"origem": origem, "url": url, "arquivo": str(arq), "bytes": len(dado)})
+    return out
+
+
 def decodificar(corpo: bytes, content_type: str) -> str:
     m = re.search(r"charset=([\w-]+)", content_type or "", re.I)
     charset = m.group(1) if m else None
@@ -350,7 +408,10 @@ class MapaParser(HTMLParser):
             self._style_buf = []
         elif tag == "img":
             self.imagens.append({"src": urljoin(self.base, a.get("src") or a.get("data-src", "")),
-                                 "alt": a.get("alt"), "lazy": a.get("loading") == "lazy"})
+                                 "alt": a.get("alt"), "lazy": a.get("loading") == "lazy",
+                                 "classe": f"{a.get('class', '')} {a.get('id', '')}".strip(),
+                                 "em_link_raiz": any(c["tag"] == "a" and c["attrs"].get("href", "") in ("/", "./", self.base)
+                                                     for c in self._captura)})
             for c in self._captura:  # alt de imagem dentro de link/botão conta como texto
                 if a.get("alt"):
                     c["texto"].append(a["alt"])
@@ -812,6 +873,8 @@ def montar_mapa(url: str, resp: dict, html: str, css_extra: str, arquivos: dict,
         "arquivos_do_site": arquivos,
     }
     mapa["sinais_de_oferta"]["bonus"] = trechos(RE_BONUS, texto_busca, 4)
+    mapa["_imagens_todas"] = p.imagens
+    mapa["_links_head"] = p.links_head
     mapa["verificacao"] = verificar(mapa, html, p)
     if embutido:
         mapa["verificacao"]["lacunas"].insert(0, f"{len(embutido)} trechos vieram de dados embutidos (JSON), não do HTML "
@@ -1235,6 +1298,9 @@ def para_md(m: dict, max_secao: int) -> str:
     L.append("\n## Identidade visual (do CSS)")
     L.append(f"- theme-color: {iv['theme_color']} · destaque: {', '.join(iv['cores_de_destaque']) or '—'} · "
              f"fontes: {', '.join(iv['fontes']) or '—'}")
+    if iv.get("logos"):
+        L.append("- Logos baixados: " + "; ".join(f"{x['origem']} -> {x['arquivo']}" for x in iv["logos"])
+                 + " (avalie com: ultra.py logo-teste ARQUIVO)")
     if iv["variaveis_de_cor"]:
         L.append("- Variáveis: " + ", ".join(f"--{k}: {v}" for k, v in list(iv["variaveis_de_cor"].items())[:12]))
     if m.get("prints"):
@@ -1354,6 +1420,10 @@ def escanear(url: str, args, pool: ThreadPoolExecutor, pasta: Path) -> dict:
         mapa["prints"] = render.get("prints", [])
         if render.get("erro") and not render.get("html"):
             mapa["verificacao"]["lacunas"].insert(0, f"Navegador não abriu ({render['motivo']}): {render['erro']}")
+    if args.logos and mapa["seo"]["palavras_visiveis"] > 0:
+        mapa["identidade_visual"]["logos"] = baixar_logos(mapa, mapa["_links_head"], pasta, slug, pool, args.timeout)
+    mapa.pop("_imagens_todas", None)
+    mapa.pop("_links_head", None)
     if args.paginas:
         urls_chave = escolher_paginas_chave(mapa, args.paginas)
         mapa["paginas_chave"] = list(pool.map(lambda u: ler_pagina_chave(u, args.timeout), urls_chave))
@@ -1388,6 +1458,7 @@ def main(argv=None):
     ap.add_argument("--print", action="store_true", help="salvar prints desktop e mobile")
     ap.add_argument("--navegador", default="auto", choices=["auto", "playwright", "chrome", "nenhum"],
                     help="auto: Playwright se houver, senão Chrome/Edge/Brave do computador; nenhum: só HTTP")
+    ap.add_argument("--sem-logos", dest="logos", action="store_false", help="não baixar os arquivos do logo")
     ap.add_argument("--paginas", type=int, default=6, help="páginas-chave para ler (preços, termos, contato...); 0 desliga")
     ap.add_argument("--max-secao", type=int, default=1500, help="caracteres por seção no .md")
     args = ap.parse_args(argv)

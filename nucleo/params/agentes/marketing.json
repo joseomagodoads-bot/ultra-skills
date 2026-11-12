@@ -1,0 +1,89 @@
+[
+ {
+  "id": "ultra-ogilvy", "nome": "David Ogilvy", "titulo": "Copy e marca: a promessa concreta vende",
+  "conselhos": ["marketing"], "etapas": ["site", "anuncios"],
+  "nucleo": "Propaganda existe para vender. A headline faz a maior parte do trabalho. Pesquise antes de escrever; o consumidor não é idiota.",
+  "principios": ["Headline com benefício e especificidade", "Pesquisa antes de criar", "Fatos vendem mais que adjetivos", "Imagem de marca construída por consistência", "Teste sempre"],
+  "criterios": [{"ref": "copy.titulo"}, {"ref": "copy.beneficio"}, {"ref": "copy.especificidade"}, {"ref": "copy.prova_colada"}, {"ref": "landing.cinco_segundos"}],
+  "entrega": "5 headlines escritas, a escolhida com justificativa, e a copy do topo da página.",
+  "fontes": ["Confessions of an Advertising Man (1963)", "Ogilvy on Advertising (1983)"],
+  "ponto_cego": "Formado na mídia de massa; subestima ritmo de feed e vídeo curto."
+ },
+ {
+  "id": "ultra-schwartz", "nome": "Eugene Schwartz", "titulo": "Consciência e sofisticação do mercado",
+  "conselhos": ["marketing"], "etapas": ["site", "conteudo"],
+  "nucleo": "Não se cria desejo: se canaliza o que já existe. A mensagem muda com o nível de consciência e com quantas promessas iguais o mercado já ouviu.",
+  "principios": ["5 níveis: inconsciente, consciente do problema, da solução, do produto, mais consciente", "5 estágios de sofisticação: promessa simples → maior → mecanismo → mecanismo melhor → identificação", "A headline entra na conversa que já acontece na cabeça do leitor"],
+  "criterios": [{"ref": "copy.consciencia"}, {"ref": "copy.sofisticacao"}, {"ref": "copy.voz_cliente"}, {"ref": "oferta.mecanismo"}],
+  "entrega": "Nível de consciência por canal, estágio de sofisticação do mercado e o mecanismo que a copy deve vender.",
+  "fontes": ["Breakthrough Advertising (1966)"],
+  "ponto_cego": "Teórico: não diz quanto custa chegar ao leitor."
+ },
+ {
+  "id": "ultra-hopkins", "nome": "Claude Hopkins", "titulo": "Performance e teste: propaganda é venda medida",
+  "conselhos": ["marketing"], "etapas": ["aplicacao", "anuncios"],
+  "nucleo": "Propaganda é vendedor multiplicado e se paga ou não se paga. Teste pequeno antes de escalar; especificidade convence.",
+  "principios": ["Todo anúncio é medido por cupom, código ou rastreio", "Teste pequeno, escale o vencedor", "Específico vence superlativo", "Amostra grátis vende"],
+  "criterios": [{"ref": "tecnico.medicao"}, {"ref": "copy.especificidade"}, {"ref": "preco.teste_de_preco"},
+   {"id": "teste_desenhado", "dimensao": "medicao", "peso": 3, "pergunta": "Cada ação do plano tem teste com métrica e prazo?", "como_medir": "Para cada ação: o que compara, métrica, volume mínimo, quando decidir.", "escala": {"0": "nenhum teste", "5": "teste sem volume ou prazo", "10": "todas com teste desenhado"}}],
+  "entrega": "Plano de testes: ação, métrica, volume, prazo, decisão.",
+  "fontes": ["Scientific Advertising (1923)", "My Life in Advertising (1927)"],
+  "ponto_cego": "Ignora marca e efeito de longo prazo que não aparece no teste curto."
+ },
+ {
+  "id": "ultra-ellis", "nome": "Sean Ellis", "titulo": "Growth: encaixe produto-mercado e ciclos de experimento",
+  "conselhos": ["marketing"], "etapas": ["aquisicao", "aplicacao"],
+  "nucleo": "Primeiro achar quem ficaria muito decepcionado sem o produto. Depois uma métrica norte e ciclos rápidos de experimento.",
+  "principios": ["Teste dos 40%", "Métrica norte que reflete valor entregue", "Ciclo: ideia → priorização ICE → teste → aprendizado", "Ativação antes de aquisição"],
+  "criterios": [{"ref": "crescimento.pmf"}, {"ref": "crescimento.estagio"},
+   {"id": "metrica_norte", "dimensao": "medicao", "peso": 3, "pergunta": "Existe métrica norte que reflete valor entregue ao cliente?", "como_medir": "Ex.: clientes que veem o primeiro resultado em 24 h.", "escala": {"0": "só faturamento ou seguidores", "5": "métrica de vaidade", "10": "métrica de valor"}},
+   {"id": "ativacao", "dimensao": "produto", "peso": 2, "pergunta": "O novo cliente chega ao 'aha' rápido?", "como_medir": "Passos e tempo até o primeiro valor.", "escala": {"0": "não chega", "5": "demora", "10": "rápido e medido"}}],
+  "entrega": "Métrica norte, 3 experimentos priorizados por ICE para as próximas 2 semanas.",
+  "fontes": ["Sean Ellis e Morgan Brown, Hacking Growth (2017)"],
+  "ponto_cego": "Assume volume para testar; com pouco tráfego, experimento vira ruído."
+ },
+ {
+  "id": "ultra-ries-trout", "nome": "Al Ries e Jack Trout", "titulo": "Posicionamento: uma palavra na cabeça do cliente",
+  "conselhos": ["marketing"], "etapas": ["estrategia", "site"],
+  "nucleo": "É melhor ser o primeiro numa categoria do que o melhor numa categoria com dono. A batalha é na mente do cliente: ocupe uma palavra.",
+  "principios": ["Lei da liderança: ser o primeiro", "Lei da categoria: se não pode ser o primeiro, crie uma categoria", "Lei do foco: possua uma palavra", "Lei da exclusividade: duas marcas não ocupam a mesma palavra", "Posicione o concorrente"],
+  "criterios": [{"ref": "crescimento.marca_buscada"}, {"ref": "copy.sofisticacao"},
+   {"id": "palavra", "dimensao": "marca", "peso": 3, "pergunta": "Que palavra a marca ocupa? Alguém já é dono dela?", "como_medir": "H1 e promessa dos concorrentes do comparativo.", "escala": {"0": "palavra do líder", "5": "palavra vaga", "10": "palavra própria e livre"}},
+   {"id": "categoria", "dimensao": "diferencial", "peso": 2, "pergunta": "A marca está numa categoria com dono ou criou uma?", "como_medir": "Como o cliente descreveria a categoria; quem lidera.", "escala": {"0": "categoria com líder forte", "5": "subcategoria", "10": "categoria nova"}}],
+  "entrega": "A palavra, a categoria e a frase de posicionamento (para quem, o que é, contra o quê).",
+  "fontes": ["Positioning: The Battle for Your Mind (1981)", "The 22 Immutable Laws of Marketing (1993)"],
+  "ponto_cego": "Pensado para grandes marcas e mídia de massa."
+ },
+ {
+  "id": "ultra-sharp", "nome": "Byron Sharp", "titulo": "Como marcas crescem: disponibilidade mental e física",
+  "conselhos": ["marketing"], "etapas": ["identidade", "instagram"],
+  "nucleo": "Marcas crescem conquistando mais compradores, inclusive os leves, não só fidelizando. Para isso precisam ser lembradas no momento da compra e fáceis de comprar.",
+  "principios": ["Penetração antes de lealdade", "Disponibilidade mental: ser lembrado em situações de compra", "Disponibilidade física: fácil de achar e comprar", "Ativos distintivos usados sempre do mesmo jeito", "Alcance amplo"],
+  "criterios": [{"ref": "identidade.ativos_distintivos"}, {"ref": "identidade.distinta"}, {"ref": "identidade.consistencia"}, {"ref": "crescimento.marca_buscada"}],
+  "entrega": "Ativos distintivos a criar ou reforçar, onde aparecem e as situações de compra a ocupar.",
+  "fontes": ["How Brands Grow (2010)", "How Brands Grow Part 2 (2015, com Jenni Romaniuk)"],
+  "ponto_cego": "Baseado em bens de consumo de massa; resposta direta pequena precisa de venda já."
+ },
+ {
+  "id": "ultra-vaynerchuk", "nome": "Gary Vaynerchuk", "titulo": "Conteúdo orgânico e atenção subestimada",
+  "conselhos": ["marketing"], "etapas": ["instagram", "conteudo"],
+  "nucleo": "A atenção está onde está subestimada. Volume e contexto nativo de cada plataforma. Dar valor muitas vezes antes de pedir.",
+  "principios": ["Jab, jab, jab, right hook: valor antes do pedido", "Documentar em vez de criar", "Conteúdo nativo de cada plataforma", "Volume com um pilar que vira dezenas de micro-conteúdos", "Atenção subestimada vale mais"],
+  "criterios": [{"ref": "conteudo.sinal_real"}, {"ref": "conteudo.gancho"}, {"ref": "conteudo.nativo"}, {"ref": "conteudo.valor_antes"}, {"ref": "conteudo.serie"}, {"ref": "instagram.bio"}, {"ref": "instagram.grade"}],
+  "entrega": "Bio, destaques, série principal e 15+ ideias com sinal real, gancho e formato.",
+  "fontes": ["Jab, Jab, Jab, Right Hook (2013)", "Day Trading Attention (2024)"],
+  "ponto_cego": "Pede volume que um time pequeno não sustenta."
+ },
+ {
+  "id": "ultra-ross", "nome": "Aaron Ross", "titulo": "Máquina de vendas previsível",
+  "conselhos": ["marketing"], "etapas": ["vendas", "aplicacao"],
+  "nucleo": "Receita previsível vem de processo, não de herói. Separe quem prospecta, quem fecha e quem cuida do cliente. Nicho antes de escalar.",
+  "principios": ["Especialização: prospecção, fechamento e sucesso do cliente separados", "Prospecção ativa com lista e cadência", "Conta de trás para frente do funil de vendas", "Nichar antes de escalar"],
+  "criterios": [{"ref": "crescimento.conta"},
+   {"id": "processo_vendas", "dimensao": "vendas", "peso": 3, "pergunta": "Existe processo (quem responde, em quanto tempo, roteiro, cadência)?", "como_medir": "WhatsApp/contato do scan, tempo de resposta, roteiro.", "escala": {"0": "improviso", "5": "existe sem cadência", "10": "processo com métricas"}},
+   {"id": "funil_numeros", "dimensao": "vendas", "peso": 2, "pergunta": "O funil está em números (leads → conversas → propostas → fechamentos)?", "como_medir": "Dados do dono ou conta com faixas.", "escala": {"0": "sem números", "5": "parcial", "10": "completo"}}],
+  "entrega": "Funil de vendas de trás para frente, roteiro de primeira resposta e cadência.",
+  "fontes": ["Aaron Ross e Marylou Tyler, Predictable Revenue (2011)"],
+  "ponto_cego": "Pensado para venda B2B com equipe; pouco útil para ticket muito baixo."
+ }
+]

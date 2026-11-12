@@ -1,0 +1,81 @@
+{
+ "pipeline": ["leitura", "pessoas", "fundadores", "vendas", "marketing", "plano"],
+ "conselhos": {
+  "leitura": {
+   "nome": "Leitura",
+   "pasta": "01-scan",
+   "membros": ["ultra-scan"],
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-scan"], "paralelo": false, "saida": "01-scan/CONFERENCIA.md",
+     "tarefa": "Rode o scan do site e dos concorrentes, baixe os logos, gere a folha de teste do logo e escreva a conferência do mapa."}
+   ]
+  },
+  "pessoas": {
+   "nome": "Cinco pessoas",
+   "pasta": "02-pessoas",
+   "membros": ["ultra-joao-vendas", "ultra-fernando-artista", "ultra-ana-crescimento", "ultra-robson-tecnico", "ultra-andre-critico"],
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-joao-vendas", "ultra-fernando-artista", "ultra-ana-crescimento", "ultra-robson-tecnico"], "paralelo": true, "saida": "02-pessoas/r1/{agente}.json",
+     "tarefa": "Leia o mapa do scan e rode a sua mente. Pontue todos os seus critérios e entregue de 3 a 5 achados com prova e ações com entregável pronto. Comece pelo veredito: vende, vende pouco ou não vende."},
+    {"n": 2, "quem": ["ultra-andre-critico"], "paralelo": false, "saida": "02-pessoas/r2/ultra-andre-critico.json",
+     "tarefa": "Leia as saídas da rodada 1 e o consolidado. Corte o genérico, rebaixe o que não tem prova, junte o repetido, diga o que ninguém viu e se o veredito se mantém."}
+   ]
+  },
+  "fundadores": {
+   "nome": "Fundadores (o teu SaaS é uma merda e eu vou te provar)",
+   "pasta": "03-fundadores",
+   "membros": ["ultra-jobs", "ultra-wozniak", "ultra-huang", "ultra-bezos"],
+   "temas": ["crescimento: de quem tomar e quanto", "diferencial: o que só este produto faz", "nível de quem usa: quem consegue usar sozinho", "design: bom de verdade ou só não é feio", "vendas e marketing: press release e oferta"],
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-jobs", "ultra-wozniak", "ultra-huang", "ultra-bezos"], "paralelo": true, "saida": "03-fundadores/r1/{agente}.json",
+     "tarefa": "Ataque o produto pela sua régua. Cada acusação tem prova (tipo 'acusacao'). Pontue todos os seus critérios. Responda aos 5 temas no campo 'temas'. Faça a pergunta do seu 'pergunta_para'."},
+    {"n": 2, "quem": ["ultra-jobs", "ultra-wozniak", "ultra-huang", "ultra-bezos"], "paralelo": true, "saida": "03-fundadores/r2/{agente}.json", "so_se": "houver divergências no consolidado da rodada 1",
+     "tarefa": "Leia o consolidado da rodada 1 (divergências e perguntas para você). Responda só às divergências em que você está envolvido: mantenha com prova nova ou mude a nota e diga por quê. Dê a nota final de 0 a 10 e o que a faria subir 3 pontos."}
+   ]
+  },
+  "vendas": {
+   "nome": "Conselho de vendas: ofertas e preços",
+   "pasta": "04-vendas",
+   "membros": ["ultra-brunson", "ultra-hormozi", "ultra-kennedy"],
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-brunson", "ultra-hormozi", "ultra-kennedy"], "paralelo": true, "saida": "04-vendas/r1/{agente}.json",
+     "tarefa": "Avalie a oferta atual com os seus critérios. Depois proponha UMA oferta nova no campo 'ofertas' (formato_oferta da biblioteca 'oferta'), com id 'of-{seu-nome}', preço, níveis, garantia, urgência real e escada. Ela precisa ser diferente da que os outros dois fariam: puxe pelo seu papel no duelo."},
+    {"n": 2, "quem": ["ultra-brunson", "ultra-hormozi", "ultra-kennedy"], "paralelo": true, "saida": "04-vendas/r2/{agente}.json",
+     "tarefa": "Leia as 3 ofertas da rodada 1. Dê nota de 0 a 10 a CADA oferta (inclusive a sua) em cada critério das bibliotecas 'oferta' e 'preco', no campo 'votos'. Diga o melhor componente de cada oferta que você roubaria."},
+    {"n": 3, "quem": ["ultra-moderador"], "paralelo": false, "saida": "04-vendas/duelo.md",
+     "tarefa": "Rode 'ultra.py duelo 04-vendas'. Com o ranking e os melhores componentes, o autor da oferta vencedora monta a OFERTA CAMPEÃ (híbrida) e as 3 ofertas por público (primário, secundário, terciário) em 04-vendas/r3/oferta-campea.json."}
+   ]
+  },
+  "marketing": {
+   "nome": "Tu é doido? Isso que é marketing",
+   "pasta": "05-marketing",
+   "membros": ["ultra-ries-trout", "ultra-schwartz", "ultra-ogilvy", "ultra-hopkins", "ultra-ellis", "ultra-ross", "ultra-sharp", "ultra-vaynerchuk", "ultra-design", "ultra-brunson", "ultra-hormozi"],
+   "etapas": {
+    "estrategia": {"donos": ["ultra-ries-trout", "ultra-schwartz"], "entrega": "palavra, categoria, nível de consciência, estratégia única em 5 linhas contra 10 concorrentes"},
+    "aquisicao": {"donos": ["ultra-ellis", "ultra-ross", "ultra-hormozi"], "entrega": "canais com objetivo, etapa, mudança escrita e métrica"},
+    "site": {"donos": ["ultra-ogilvy", "ultra-schwartz"], "entrega": "copy completa por seção, 5 headlines e a escolhida"},
+    "identidade": {"donos": ["ultra-design", "ultra-sharp"], "entrega": "paleta provada, tipografia, ativos distintivos, brief do logo"},
+    "instagram": {"donos": ["ultra-vaynerchuk", "ultra-sharp"], "entrega": "foto, bio, destaques, 9 primeiros posts, funil de conteúdo"},
+    "oferta": {"donos": ["04-vendas"], "entrega": "vem da oferta campeã do conselho de vendas"},
+    "aplicacao": {"donos": ["ultra-hopkins", "ultra-ellis", "ultra-ross"], "entrega": "90 dias semana a semana, testes com métrica e prazo, funil de vendas em números"},
+    "conteudo": {"donos": ["ultra-vaynerchuk", "ultra-schwartz"], "entrega": "15 a 30 ideias com sinal real, gancho, formato e funil"}
+   },
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-ries-trout", "ultra-schwartz", "ultra-ogilvy", "ultra-hopkins", "ultra-ellis", "ultra-ross", "ultra-sharp", "ultra-vaynerchuk", "ultra-design"], "paralelo": true, "saida": "05-marketing/r1/{agente}.json",
+     "tarefa": "Leia o mapa, os vereditos de 02 e 03 e a oferta campeã de 04. Pontue os seus critérios e escreva no campo 'entregas' as entregas PRONTAS das etapas em que você é dono. Ações com entregável pronto."}
+   ]
+  },
+  "plano": {
+   "nome": "Plano final",
+   "pasta": "06-plano",
+   "membros": ["ultra-moderador", "ultra-andre-critico", "ultra-plano"],
+   "rodadas": [
+    {"n": 1, "quem": ["ultra-moderador"], "paralelo": false, "saida": "06-plano/VEREDITO.md", "tarefa": "Consolide todos os conselhos e escreva o veredito."},
+    {"n": 2, "quem": ["ultra-andre-critico"], "paralelo": false, "saida": "06-plano/andre-final.json", "tarefa": "Passe o crivo no veredito e no plano-base: corte, rebaixe, diga o que testar."},
+    {"n": 3, "quem": ["ultra-plano"], "paralelo": false, "saida": "06-plano/plano-de-acao.pdf", "tarefa": "Gere o plano-base, complete os entregáveis e gere o PDF."}
+   ]
+  }
+ },
+ "divergencia_minima": 4,
+ "consenso_maximo": 1.5
+}

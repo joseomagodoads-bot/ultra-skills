@@ -670,3 +670,13 @@ Todas têm a mesma estrutura: quem é, escola, como pensa, roteiro, testes, núm
 | O que mais derruba | frete e prazo | custo extra no fim |
 
 Quem vende para fora a partir do Brasil tem um risco a mais: checkout em endereço brasileiro, moeda errada, pedido de CPF, nome estranho na fatura do cartão. Robson testa; Fernando diz se dá medo.
+## Modo agentes
+
+As cinco mentes também existem como agentes separados: `ultra-joao-vendas`, `ultra-fernando-artista`, `ultra-ana-crescimento`, `ultra-robson-tecnico` e `ultra-andre-critico`. Cada um lê os próprios parâmetros (critérios com peso e régua de 0 a 10) e devolve um JSON no formato comum. Os quatro primeiros rodam em paralelo e o André entra depois, com as saídas deles. O motor junta tudo, mostra onde discordam e dá o placar de evidência:
+
+```bash
+python3 ~/.ultra-skills/ultra.py params ultra-joao-vendas   # ver os parâmetros
+python3 ~/.ultra-skills/ultra.py proximo --json             # dentro de uma análise iniciada
+```
+
+Este arquivo continua valendo como a mente completa de cada um. Os parâmetros são a versão para leitura rápida.

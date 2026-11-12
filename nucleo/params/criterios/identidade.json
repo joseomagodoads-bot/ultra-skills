@@ -1,0 +1,28 @@
+{
+ "id": "identidade",
+ "nome": "Identidade visual (cor, letra, imagem, ativos)",
+ "origem": "Massimo Vignelli, Byron Sharp e Jenni Romaniuk (ativos distintivos), WCAG 2.2, Refactoring UI",
+ "como_avaliar": "Use a seção 'Identidade visual' do scan (cores de destaque, variáveis, fontes) e os prints (--print). Prove a paleta com scripts/paleta.py contra o comparativo.json.",
+ "criterios": [
+  {"id": "paleta_enxuta", "dimensao": "design", "peso": 2, "pergunta": "A marca usa 2 ou 3 cores com papel definido?", "como_medir": "Cores de destaque do scan: quantas e com que função (fundo, texto, ação).", "escala": {"0": "5+ cores sem papel", "5": "3 a 4 cores, papéis confusos", "10": "2 a 3 cores, cada uma com função"}},
+  {"id": "cor_de_acao", "dimensao": "acao", "peso": 2, "pergunta": "Existe uma cor só para ação (botões), e só ela?", "como_medir": "Nos prints, a cor do botão principal aparece em outros lugares?", "escala": {"0": "botões de cores diferentes", "5": "cor de ação também decorativa", "10": "uma cor, só para ação"}},
+  {"id": "contraste", "dimensao": "design", "peso": 2, "pergunta": "Texto passa no contraste mínimo?", "como_medir": "paleta.py: texto normal ≥ 4,5:1, texto grande e botões ≥ 3:1 (WCAG 2.2).", "escala": {"0": "texto principal abaixo de 3:1", "5": "algum texto secundário abaixo de 4,5", "10": "tudo passa"}},
+  {"id": "distinta", "dimensao": "marca", "peso": 3, "pergunta": "A paleta é diferente da dos concorrentes?", "como_medir": "paleta.py --comparativo: Delta E < 15 = parece igual.", "escala": {"0": "parece igual ao líder", "5": "parecida com 1 concorrente", "10": "família de cor que ninguém do grupo usa"}},
+  {"id": "tipografia", "dimensao": "design", "peso": 2, "pergunta": "No máximo 2 famílias, com hierarquia clara?", "como_medir": "Fontes do scan + prints: famílias, degraus de tamanho, texto ≥ 16 px no celular.", "escala": {"0": "3+ famílias ou texto < 14 px", "5": "2 famílias sem hierarquia", "10": "1 a 2 famílias, hierarquia limpa"}},
+  {"id": "ativos_distintivos", "dimensao": "marca", "peso": 3, "pergunta": "Existe algo que se repete e identifica a marca sem o nome?", "como_medir": "Cor, forma, personagem, frase, som, padrão. Aparece em site, perfil e anúncio?", "escala": {"0": "nada próprio", "5": "um ativo, usado às vezes", "10": "2+ ativos, sempre do mesmo jeito"}},
+  {"id": "imagens_reais", "dimensao": "confianca", "peso": 2, "pergunta": "Fotos reais ou banco de imagem/IA?", "como_medir": "Prints: produto em uso, pessoa real, lugar real.", "escala": {"0": "banco de imagem ou cara de IA", "5": "misturado", "10": "real, nítido, mesmo estilo"}},
+  {"id": "cara_de_template", "dimensao": "design", "peso": 2, "pergunta": "Parece coisa pronta?", "como_medir": "Degradê roxo-azul, 3 cartões iguais com ícone, emoji no lugar de ícone, fonte padrão do construtor, seções na ordem de sempre.", "escala": {"0": "template sem nada próprio", "5": "template com ajustes", "10": "tem cara própria"}},
+  {"id": "consistencia", "dimensao": "design", "peso": 1, "pergunta": "Botões, ícones, cantos e sombras seguem uma regra?", "como_medir": "Prints: compare 3 botões e 3 cartões.", "escala": {"0": "cada um de um jeito", "5": "quase", "10": "sistema consistente"}}
+ ],
+ "testes": [
+  "scripts/paleta.py --cores ... --comparativo comparativo.json",
+  "Olho apertado no print: sobra uma coisa principal e o botão?",
+  "Troca do logo: a página continua parecendo desta marca?"
+ ],
+ "referencias": [
+  {"fonte": "Byron Sharp, How Brands Grow", "ano": 2010, "ideia": "ativos distintivos e disponibilidade mental"},
+  {"fonte": "Jenni Romaniuk, Building Distinctive Brand Assets", "ano": 2018, "ideia": "ativo só vale se for único e conhecido"},
+  {"fonte": "WCAG 2.2", "ano": 2023, "ideia": "contraste 4,5:1 e 3:1; alvo de toque"},
+  {"fonte": "Adam Wathan e Steve Schoger, Refactoring UI", "ano": 2018, "ideia": "hierarquia por peso, cor e espaço"}
+ ]
+}

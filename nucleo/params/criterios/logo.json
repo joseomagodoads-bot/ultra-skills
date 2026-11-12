@@ -1,0 +1,37 @@
+{
+ "id": "logo",
+ "nome": "Logo e símbolo",
+ "origem": "Régua de marca da Apple (Human Interface Guidelines de ícones), Paul Rand, Chermayeff & Geismar & Haviv, Massimo Vignelli",
+ "como_avaliar": "Precisa ver o logo. Use os arquivos baixados pelo scan (<site>-logo-*.png/ico/svg) e gere a folha de teste: ultra.py logo-teste ARQUIVO. Sem imagem, a nota é null e o motivo é 'não vi'.",
+ "criterios": [
+  {"id": "simplicidade", "dimensao": "marca", "peso": 3, "pergunta": "Quantas formas e elementos o logo tem?", "como_medir": "Conte formas, cores e textos. Dá para redesenhar com até 3 formas?", "escala": {"0": "cena, ilustração ou vários elementos", "5": "simples, mas com detalhe que some", "10": "uma ideia, poucas formas, nada sobrando"}},
+  {"id": "pequeno", "dimensao": "marca", "peso": 3, "pergunta": "Funciona em 16 e 32 px (ícone da aba, avatar)?", "como_medir": "Folha de teste: linhas 16, 32 e 110 px.", "escala": {"0": "vira mancha em 32 px", "5": "lê em 32 px, some em 16", "10": "reconhecível em 16 px"}},
+  {"id": "uma_cor", "dimensao": "marca", "peso": 2, "pergunta": "Funciona em uma cor só?", "como_medir": "Folha de teste: versão preta sobre branco.", "escala": {"0": "depende de degradê ou várias cores", "5": "funciona, mas perde parte", "10": "igual de forte em uma cor"}},
+  {"id": "invertido", "dimensao": "marca", "peso": 2, "pergunta": "Funciona em fundo escuro e claro?", "como_medir": "Folha de teste: versões invertidas.", "escala": {"0": "some no fundo escuro", "5": "precisa de ajuste", "10": "funciona dos dois jeitos"}},
+  {"id": "distincao", "dimensao": "marca", "peso": 3, "pergunta": "Dá para confundir com algum concorrente?", "como_medir": "Coloque ao lado dos logos de 5 concorrentes do scan. Compare silhueta e cor.", "escala": {"0": "parece o de um concorrente", "5": "diferente, mas genérico do setor", "10": "inconfundível no grupo"}},
+  {"id": "memoria", "dimensao": "marca", "peso": 2, "pergunta": "Dá para desenhar de memória depois de ver por 5 segundos?", "como_medir": "Descreva o logo em uma frase sem olhar. A frase basta para redesenhar?", "escala": {"0": "impossível descrever", "5": "lembra a ideia, não a forma", "10": "descreve e redesenha"}},
+  {"id": "adequacao", "dimensao": "marca", "peso": 2, "pergunta": "O tom combina com o público e com o preço?", "como_medir": "Compare com o preço e o público do scan. Produto caro com logo de template, ou o contrário?", "escala": {"0": "contradiz o preço ou o público", "5": "neutro", "10": "reforça o posicionamento"}},
+  {"id": "atemporal", "dimensao": "marca", "peso": 2, "pergunta": "Depende de efeito da moda?", "como_medir": "Procure degradê da moda, 3D, brilho, sombra, vidro, traço fino que some.", "escala": {"0": "cheio de efeito datado", "5": "um efeito removível", "10": "forma pura, sem efeito"}},
+  {"id": "legibilidade_nome", "dimensao": "marca", "peso": 2, "pergunta": "O nome (logotipo) é legível e bem espaçado?", "como_medir": "Leia em 110 px. Letras grudadas, fonte padrão sem ajuste, nome cortado?", "escala": {"0": "ilegível ou fonte padrão crua", "5": "legível sem cuidado", "10": "legível e com espaçamento ajustado"}},
+  {"id": "versoes", "dimensao": "marca", "peso": 1, "pergunta": "Tem versão quadrada (avatar) e horizontal (site)?", "como_medir": "Compare favicon, apple-touch-icon, logo do cabeçalho e foto de perfil.", "escala": {"0": "a mesma imagem esmagada em tudo", "5": "uma versão boa, outra improvisada", "10": "sistema coerente de versões"}},
+  {"id": "sem_texto_miudo", "dimensao": "marca", "peso": 1, "pergunta": "Tem slogan ou texto pequeno dentro do símbolo?", "como_medir": "Texto abaixo de ~1/6 da altura do símbolo some em tamanho pequeno.", "escala": {"0": "slogan dentro do logo", "5": "texto pequeno opcional", "10": "nenhum texto miúdo"}}
+ ],
+ "testes": [
+  "ultra.py logo-teste ARQUIVO: gera folha com 16, 32, 110 px, uma cor, invertido e sobre o fundo da marca",
+  "Comparação lado a lado com logos dos concorrentes do scan (mesma altura)",
+  "Teste dos 5 segundos: olhar, desviar, descrever"
+ ],
+ "alertas": [
+  "Logo é print de tela ou imagem com fundo branco em vez de PNG transparente ou SVG",
+  "Ícone da aba (favicon) padrão do construtor de sites",
+  "Símbolo genérico do setor: garfo e faca, engrenagem, cérebro de IA, foguete, lâmpada",
+  "Mesma cor do líder do mercado",
+  "Logo diferente no site, no Instagram e no checkout"
+ ],
+ "referencias": [
+  {"fonte": "Apple Human Interface Guidelines, seção de ícones de app", "ideia": "simplicidade, uma ideia central, funcionar em vários tamanhos, evitar texto"},
+  {"fonte": "Paul Rand, Design, Form, and Chaos", "ano": 1993, "ideia": "o logo ganha significado pela qualidade do que representa; simplicidade e distinção"},
+  {"fonte": "Chermayeff & Geismar & Haviv, Identify", "ano": 2011, "ideia": "um bom logo é simples, memorável e adequado"},
+  {"fonte": "Massimo Vignelli, The Vignelli Canon", "ano": 2010, "ideia": "disciplina, poucas escolhas, atemporalidade"}
+ ]
+}

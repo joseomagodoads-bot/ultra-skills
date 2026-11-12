@@ -1,0 +1,20 @@
+{
+ "id": "confianca",
+ "nome": "Confiança (quem vende, risco, reputação)",
+ "origem": "B.J. Fogg (credibilidade), Decreto 7.962/2013, CDC, FTC, Opinion Box, Reclame Aqui",
+ "como_avaliar": "Contato e confiança + páginas-chave do scan (CNPJ, empresa, políticas), busca '[marca] reclame aqui' e '[marca] golpe', perfil social.",
+ "criterios": [
+  {"id": "quem_vende", "dimensao": "confianca", "peso": 3, "pergunta": "Empresa identificada (nome, CNPJ ou registro, endereço)?", "como_medir": "Scan: empresa, CNPJ e onde foram achados. No Brasil, Decreto 7.962/2013 exige em destaque.", "escala": {"0": "anônimo", "5": "só nas letras miúdas", "10": "à vista e consistente"}},
+  {"id": "contato", "dimensao": "confianca", "peso": 2, "pergunta": "Existe contato que responde?", "como_medir": "WhatsApp, telefone, e-mail de domínio próprio. Testar tempo de resposta se possível.", "escala": {"0": "nenhum", "5": "só formulário", "10": "canal direto e rápido"}},
+  {"id": "politicas", "dimensao": "confianca", "peso": 2, "pergunta": "Termos, privacidade, troca e reembolso claros e fáceis de achar?", "como_medir": "Páginas-chave lidas pelo scan.", "escala": {"0": "não existem", "5": "existem, vagas", "10": "claras e específicas"}},
+  {"id": "reputacao", "dimensao": "prova", "peso": 2, "pergunta": "O que aparece fora do site (Reclame Aqui, avaliações, comentários)?", "como_medir": "Buscas de desconfiança.", "escala": {"0": "reclamações sem resposta ou nada", "5": "pouca presença", "10": "boa reputação verificável"}},
+  {"id": "pagamento_seguro", "dimensao": "confianca", "peso": 2, "pergunta": "O pagamento parece seguro e no mesmo lugar?", "como_medir": "Domínio do checkout, moeda, idioma, nome na fatura.", "escala": {"0": "domínio estranho ou só Pix para pessoa física", "5": "terceiro conhecido sem explicação", "10": "consistente e reconhecido"}},
+  {"id": "rosto", "dimensao": "confianca", "peso": 1, "pergunta": "Tem gente de verdade por trás?", "como_medir": "Foto real do fundador ou equipe, história, perfil com vida.", "escala": {"0": "ninguém", "5": "mascote ou nome sem rosto", "10": "pessoa real verificável"}},
+  {"id": "depoimentos_verificaveis", "dimensao": "prova", "peso": 2, "pergunta": "Depoimentos têm nome, contexto e dá para conferir?", "como_medir": "Nome completo, cidade, data, resultado, link. FTC proíbe avaliação falsa desde out/2024.", "escala": {"0": "anônimos ou inventados", "5": "nome sem contexto", "10": "verificáveis"}}
+ ],
+ "numeros_de_bolso": [
+  {"dado": "24% dos brasileiros perderam dinheiro em golpe digital em 12 meses", "fonte": "DataSenado", "ano": 2024},
+  {"dado": "88% desistem rápido quando desconfiam de um site", "fonte": "Opinion Box", "ano": 2025},
+  {"dado": "8 em cada 10 leem avaliações antes de comprar", "fonte": "Reclame Aqui", "ano": 2025}
+ ]
+}
